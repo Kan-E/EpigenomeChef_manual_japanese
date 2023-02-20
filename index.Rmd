@@ -1,5 +1,5 @@
 ---
-  title: "NGSblender manual"
+  title: "EpigenomeChef manual"
   date: '`r format(Sys.time(), "%y/%m/%d %H:%M")`'
 ---
 
@@ -11,33 +11,49 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 概要
 
-![](manual_figure/graphical_abstract.png){#id .class width=100%} <br><br>
+![](manual_figure/graphical_abstract2.png){#id .class width=100%} <br><br>
 
-NGSblenderは、ChIP-seqやATAC-seqにより得たカバレッジデータ(.BigWig)及びピークコールデータ(.bed)を自動的に統計解析・可視化するウェブアプリです。<br>
+EpigenomeChefは、ChIP-seqやATAC-seqにより得たカバレッジデータ(.BigWig)及びピークコールデータ(.bed)を自動的に統計解析・可視化するウェブアプリです。<br>
 単一のデータセットの解析だけでなく、複数のデータセットの結果を統合解析(エピゲノムデータの統合解析)することも可能です。<br>
 ChIP-seq, ATAC-seq, Bisulfite-seqのデータベースである**ChIP-atlas**からダウンロードしたデータをそのまま使用することができます(事前にファイル名を変更する必要があります。詳細はInput fileの共通ルール・注意点)。
-また、RNA-seqデータから得た遺伝子発現変動(DEG)解析結果を同時にアップロードすることで、トランスクリプトーム解析との統合解析も可能です。<br>
-Publication-readyな高解像度Figure（イラストレーターで編集可能なPDFファイル）をダウンロードすることができます。<br><br>
+また、RNA-seqデータから得た遺伝子発現変動(DEG)解析結果を同時にアップロードすることで、トランスクリプトーム解析との統合解析も可能です。<br><br>
 EpigenomeChefは、Docker imageをインストールすることで使用可能です。<br>
-0. (Docker環境がない場合) Dockerのインストール<br>
-1. 以下のコマンドの実行(一度実行すれば以後必要ありません) <br> 
+**0.（Docker環境がない場合）Dockerのインストール**<br>
+インストール方法は以下のページが詳しいです。<br>
+Windows:[https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html](https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html)<br>
+Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/)<br><br>
+
+**1. EpigenomeChefのインストール**（一度実行すれば以後必要ありません） <br> 
+注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
+HOMER human (hg19)対応 
 ```
-##human (hg19, hg38), mouse (mm10)対応 
-docker pull kanetoh1030/shiny-NGSblender:hg19hg38mm10-v0.0.1
+docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.1
 ```
-2. 実行コマンドの入力
+
+HOMER mouse (mm10)対応 
 ```
-##human (hg19, hg38), mouse (mm10)対応
-docker run --rm -p 3838:3838 kanetoh1030/shiny-NGSblender:hg19hg38mm10-v0.0.1
+docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.1
 ```
-ブラウザで[http://localhost:3838](http://localhost:3838)を立ち上げる.
+
+**2. コンテナの作成**（実行コマンドの入力）<br>
+HOMER human (hg19)対応 
+```
+docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.1
+```
+HOMER mouse (mm10)対応 
+```
+docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.1
+
+```
+**ブラウザで[http://localhost:3838](http://localhost:3838)を立ち上げる**。<br>
+解析終了後はコンテナを削除してください。<br>
 
 If you need help, please create an issue on [Github](https://github.com/Kan-E/EpigenomeChef/issues) or [contact us](mailto:kaneto@kumamoto-u.ac.jp){.email}. <br>
 
 
 本アプリは以下のセクションにより構成されます。<br>
 
-- **Pair-wise DAR** (２群間比較のdifferential accessible region解析)
+- **Pair-wise** (２群間比較のdifferential accessible region解析)
 
 - **Venn diagram** (ゲノム領域の位置情報の重ね合わせの解析)
 
@@ -548,6 +564,7 @@ bedファイルに含まれるゲノム領域のみをカウント化します�
 - **Promoterを選ぶ場合**<br>
 bed fileのアップロードは不要となります。<br>
 Promoter領域の範囲は自由に変更可能です（default: upstream = 500 bp, downstream = 500 bp）。<br>
+gene list fileをアップロードすることで、gene list fileに含まれる遺伝子のみを抽出します。解析対象となる遺伝子を絞り込むことができます。<br>
 Speciesの選択が必須となります。<br><br>
    
 なお、アップロードするファイル名は**Input fileの共通ルール・注意点**に記載されたルールをお守りください。<br>
@@ -686,7 +703,6 @@ Venn diagramやk-means clusteringの結果を用いることで、同定した�
 Enrichment viewerにおいて必ず必要となるファイルです。<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br>
-**最大アップロード数は４ファイル**です。
 
 ---
 
@@ -772,7 +788,7 @@ HOMERの実行結果がzip形式で一括downloadできます。<br><br>
 AからBの領域を引いたファイルを作成します。<br><br>
 ![venn input](manual_figure/subtract.png){#id .class width=90%}<br><br>
 
-### Subtract
+### Intersect
 AのうちBとoverlapする領域だけを抽出したファイルを作成します。<br>
 (-wa option) Bとoverlapする領域をそのまま抽出したファイルを作成します。<br>
 (-v option) Bとoverlapしない領域のみを抽出したファイルを作成します。<br><br>
@@ -911,7 +927,7 @@ Gviz (for track plot)
 # License
 This shiny code is licensed under the GPLv3. Please see the file LICENSE.md for information.
 ```
-NGSblender
+EpigenomeChef
 Shiny App for highlighting epigenome-transcriptome interaction.
 Copyright (C) 2023  Kan Etoh
 

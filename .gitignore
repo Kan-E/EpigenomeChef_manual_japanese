@@ -1,3 +1,6 @@
 
 *.ai
 .DS_Store
+*.mov
+index_English.Rmd
+index_English.html
