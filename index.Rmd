@@ -25,26 +25,35 @@ Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](ht
 
 **1. EpigenomeChefのインストール**（一度実行すれば以後必要ありません） <br> 
 注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
-HOMER human (hg19)対応 
+HOMER human (hg19)対応 (required storage size: 18Gb)
 ```
-docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.1
+docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.2
 ```
 
-HOMER mouse (mm10)対応 
+HOMER mouse (mm10)対応 (required storage size: 17Gb)
 ```
-docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.1
+docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.2
+```
+
+HOMER fly (dm6) and worm (ce11)対応 (required storage size: 8Gb)
+```
+docker pull kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2
 ```
 
 **2. コンテナの作成**（実行コマンドの入力）<br>
 HOMER human (hg19)対応 
 ```
-docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.1
+docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.2
 ```
 HOMER mouse (mm10)対応 
 ```
-docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.1
-
+docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.2
 ```
+HOMER fly (dm6) and worm (ce11)対応 
+```
+docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2
+```
+
 **ブラウザで[http://localhost:3838](http://localhost:3838)を立ち上げる**。<br>
 解析終了後はコンテナを削除してください。<br>
 
@@ -360,7 +369,7 @@ Venn diagramにより共通・非共通のゲノム領域を同定します。�
 Venn diagram解析において必ず必要となるファイルです。<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br>
-**最大アップロード数は４ファイル**です。
+**最大アップロード数は5ファイル**です。
 - **BigWig files**<br>
 Trackplotやpeak pattern (peak heatmapやline plot)を出力する場合は必要となります。<br>
 その他の機能においてはアップロードは不要です。
@@ -850,11 +859,26 @@ rGREAT, clusterProfiler, DOSE, msigdbr, dorothea (for enrichment analysis)
   package version 7.5.1, <https://CRAN.R-project.org/package=msigdbr>.
 - Garcia-Alonso L, Holland CH, Ibrahim MM, Turei D, Saez-Rodriguez J. 'Benchmark and integration of resources for the estimation of human transcription factor activities.' Genome Research. 2019. DOI: 10.1101/gr.240663.118.
 
-AnnotationDbi, org.Hs.eg.db, org.Mm.eg.db (for genome wide annotation)
+AnnotationDbi, Rpackages for annotation (for genome wide annotation)
 
 - Hervé Pagès, Marc Carlson, Seth Falcon and Nianhua Li (2020). AnnotationDbi: Manipulation of SQLite-based annotations in Bioconductor. R package version 1.52.0. https://bioconductor.org/packages/AnnotationDbi
 - Marc Carlson (2020). org.Hs.eg.db: Genome wide annotation for Human. R package version 3.12.0.
 - Marc Carlson (2020). org.Mm.eg.db: Genome wide annotation for Mouse. R package version 3.12.0.
+- Marc Carlson (2022). org.Rn.eg.db: Genome wide annotation for Rat. R package version 3.15.0.
+- Marc Carlson (2022). org.Xl.eg.db: Genome wide annotation for Worm. R package version 3.15.0.
+- Marc Carlson (2022). org.Dm.eg.db: Genome wide annotation for Rat. R package version 3.15.0.
+- Marc Carlson (2022). org.Ce.eg.db: Genome wide annotation for Worm. R package version 3.15.0.
+- Marc Carlson (2022). org.Bt.eg.db: Genome wide annotation for Bovine. R package version 3.15.0.
+- Marc Carlson (2022). org.Cf.eg.db: Genome wide annotation for Canine. R package version 3.15.0.
+- Marc Carlson (2022). org.Dr.eg.db: Genome wide annotation for Zebrafish. R package version 3.15.0.
+- Marc Carlson (2022). org.Gg.eg.db: Genome wide annotation for Chicken. R package version 3.15.0.
+- Marc Carlson (2022). org.Mmu.eg.db: Genome wide annotation for Rhesus. R package version 3.15.0.
+- Marc Carlson (2022). org.Pt.eg.db: Genome wide annotation for Chimp. R package version 3.15.0.
+- Müller K, Ooms J, James D, DebRoy S, Wickham H, Horner J (2022). RMariaDB: Database Interface and MariaDB Driver. R package version 1.2.2, <https://CRAN.R-project.org/package=RMariaDB>.
+
+biomart (for interspecies gene_ID conversion)
+
+- Mapping identifiers for the integration of genomic datasets with the R/Bioconductor package biomaRt. Steffen Durinck, Paul T. Spellman, Ewan Birney and Wolfgang Huber, Nature Protocols 4, 1184-1191 (2009).
 
 genefilter (for z-score normalization)
 
@@ -874,7 +898,7 @@ venn (for venn diagram analysis)
 - Mitjavila-Ventura A (2022). _plotmics: Visualization of Omics And Sequencing Data In R_. https://amitjavilaventura.github.io/plotmics/index.html,
   https://github.com/amitjavilaventura/plotmics.
 
-GenomicRanges, soGGi, ChIPQC,ChIPseeker,TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb.Hsapiens.UCSC.hg19.knownGene (for manupilate genomic information and annotation)
+GenomicRanges, soGGi, ChIPQC,ChIPseeker,TxDbs (for manupilate genomic information and annotation)
 
 - Lawrence M, Huber W, Pag\`es H, Aboyoun P, Carlson M, et al. (2013) Software for Computing and Annotating Genomic Ranges. PLoS Comput Biol 9(8): e1003118. doi:10.1371/journal.pcbi.1003118"
 - Dharmalingam G, Carroll T (2015). _soGGi: Visualise ChIP-seq, MNase-seq and motif occurrence as aggregate plots Summarised Over Grouped Genomic Intervals_. R package version 1.10.4.
@@ -884,6 +908,15 @@ GenomicRanges, soGGi, ChIPQC,ChIPseeker,TxDb.Mmusculus.UCSC.mm10.knownGene, TxDb
 - Team BC, Maintainer BP (2019). _TxDb.Mmusculus.UCSC.mm10.knownGene: Annotation package for TxDb object(s)_. R package version 3.10.0.
 - Carlson M, Maintainer BP (2015). _TxDb.Hsapiens.UCSC.hg19.knownGene: Annotation package for TxDb object(s)_. R package version 3.2.2.
 - Team BC, Maintainer BP (2022). _TxDb.Hsapiens.UCSC.hg38.knownGene: Annotation package for TxDb object(s)_. R package version 3.15.0.
+- Team BC, Maintainer BP (2020). _TxDb.Dmelanogaster.UCSC.dm6.ensGene: Annotation package for TxDb object(s)_. R package version 3.12.0.
+- Team BC, Maintainer BP (2019). _TxDb.Rnorvegicus.UCSC.rn6.refGene: Annotation package for TxDb object(s)_. R package version 3.4.6.
+- Team BC, Maintainer BP (2019). _TxDb.Celegans.UCSC.ce11.refGene: Annotation package for TxDb object(s)_. R package version 3.4.6.
+- Team BC, Maintainer BP (2020). _TxDb.Btaurus.UCSC.bosTau8.refGene: Annotation package for TxDb object(s)_. R package version 3.12.0.
+- Team BC, Maintainer BP (2020). _TxDb.Cfamiliaris.UCSC.canFam3.refGene: Annotation package for TxDb object(s)_. R package version 3.11.0.
+- Team BC, Maintainer BP (2019). _TxDb.Drerio.UCSC.danRer10.refGene: Annotation package for TxDb object(s)_. R package version 3.4.6.
+- Team BC, Maintainer BP (2020). _TxDb.Ggallus.UCSC.galGal4.refGene: Annotation package for TxDb object(s)_. R package version 3.12.0.
+- Team BC, Maintainer BP (2020). _TxDb.Mmulatta.UCSC.rheMac8.refGene: Annotation package for TxDb object(s)_. R package version 3.12.0.
+- Team BC, Maintainer BP (2020). _TxDb.Ptroglodytes.UCSC.panTro4.refGene: Annotation package for TxDb object(s)_. R package version 3.12.0.
 
 dplyr and tidyr (for data manipulation)
 

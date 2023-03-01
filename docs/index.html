@@ -16,7 +16,7 @@
 <script src="site_libs/header-attrs-2.19/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -33,7 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
 <style type="text/css">
@@ -237,7 +237,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">EpigenomeChef manual</h1>
-<h4 class="date">23/02/21 12:28</h4>
+<h4 class="date">23/03/01 16:21</h4>
 
 </div>
 
@@ -263,16 +263,20 @@ EpigenomeChefのインストール</strong>（一度実行すれば以後必要�
 <br>
 注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker
 imageを分割しています。解析したいデータセットの種に対応するdocker
-imageをインストールしてください。<br> HOMER human (hg19)対応</p>
-<pre><code>docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.1</code></pre>
-<p>HOMER mouse (mm10)対応</p>
-<pre><code>docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.1</code></pre>
+imageをインストールしてください。<br> HOMER human (hg19)対応 (required
+storage size: 18Gb)</p>
+<pre><code>docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.2</code></pre>
+<p>HOMER mouse (mm10)対応 (required storage size: 17Gb)</p>
+<pre><code>docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.2</code></pre>
+<p>HOMER fly (dm6) and worm (ce11)対応 (required storage size: 8Gb)</p>
+<pre><code>docker pull kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2</code></pre>
 <p><strong>2. コンテナの作成</strong>（実行コマンドの入力）<br> HOMER
 human (hg19)対応</p>
-<pre><code>docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.1</code></pre>
+<pre><code>docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.2</code></pre>
 <p>HOMER mouse (mm10)対応</p>
-<pre><code>docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.1
-</code></pre>
+<pre><code>docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.2</code></pre>
+<p>HOMER fly (dm6) and worm (ce11)対応</p>
+<pre><code>docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2</code></pre>
 <p><strong>ブラウザで<a
 href="http://localhost:3838">http://localhost:3838</a>を立ち上げる</strong>。<br>
 解析終了後はコンテナを削除してください。<br></p>
@@ -664,7 +668,7 @@ style="width:50.0%" alt="venn diagram set" /><br></p>
 diagram解析において必ず必要となるファイルです。<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br>
-<strong>最大アップロード数は４ファイル</strong>です。</li>
+<strong>最大アップロード数は5ファイル</strong>です。</li>
 <li><strong>BigWig files</strong><br> Trackplotやpeak pattern (peak
 heatmapやline plot)を出力する場合は必要となります。<br>
 その他の機能においてはアップロードは不要です。</li>
@@ -1308,7 +1312,7 @@ class="uri">https://CRAN.R-project.org/package=msigdbr</a>.</li>
 transcription factor activities.’ Genome Research. 2019. DOI:
 10.1101/gr.240663.118.</li>
 </ul>
-<p>AnnotationDbi, org.Hs.eg.db, org.Mm.eg.db (for genome wide
+<p>AnnotationDbi, Rpackages for annotation (for genome wide
 annotation)</p>
 <ul>
 <li>Hervé Pagès, Marc Carlson, Seth Falcon and Nianhua Li (2020).
@@ -1320,6 +1324,36 @@ class="uri">https://bioconductor.org/packages/AnnotationDbi</a></li>
 R package version 3.12.0.</li>
 <li>Marc Carlson (2020). org.Mm.eg.db: Genome wide annotation for Mouse.
 R package version 3.12.0.</li>
+<li>Marc Carlson (2022). org.Rn.eg.db: Genome wide annotation for Rat. R
+package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Xl.eg.db: Genome wide annotation for Worm.
+R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Dm.eg.db: Genome wide annotation for Rat. R
+package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Ce.eg.db: Genome wide annotation for Worm.
+R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Bt.eg.db: Genome wide annotation for
+Bovine. R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Cf.eg.db: Genome wide annotation for
+Canine. R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Dr.eg.db: Genome wide annotation for
+Zebrafish. R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Gg.eg.db: Genome wide annotation for
+Chicken. R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Mmu.eg.db: Genome wide annotation for
+Rhesus. R package version 3.15.0.</li>
+<li>Marc Carlson (2022). org.Pt.eg.db: Genome wide annotation for Chimp.
+R package version 3.15.0.</li>
+<li>Müller K, Ooms J, James D, DebRoy S, Wickham H, Horner J (2022).
+RMariaDB: Database Interface and MariaDB Driver. R package version
+1.2.2, <a href="https://CRAN.R-project.org/package=RMariaDB"
+class="uri">https://CRAN.R-project.org/package=RMariaDB</a>.</li>
+</ul>
+<p>biomart (for interspecies gene_ID conversion)</p>
+<ul>
+<li>Mapping identifiers for the integration of genomic datasets with the
+R/Bioconductor package biomaRt. Steffen Durinck, Paul T. Spellman, Ewan
+Birney and Wolfgang Huber, Nature Protocols 4, 1184-1191 (2009).</li>
 </ul>
 <p>genefilter (for z-score normalization)</p>
 <ul>
@@ -1350,10 +1384,8 @@ class="uri">https://amitjavilaventura.github.io/plotmics/index.html</a>,
 <a href="https://github.com/amitjavilaventura/plotmics"
 class="uri">https://github.com/amitjavilaventura/plotmics</a>.</li>
 </ul>
-<p>GenomicRanges, soGGi,
-ChIPQC,ChIPseeker,TxDb.Mmusculus.UCSC.mm10.knownGene,
-TxDb.Hsapiens.UCSC.hg19.knownGene (for manupilate genomic information
-and annotation)</p>
+<p>GenomicRanges, soGGi, ChIPQC,ChIPseeker,TxDbs (for manupilate genomic
+information and annotation)</p>
 <ul>
 <li>Lawrence M, Huber W, Pag`es H, Aboyoun P, Carlson M, et al. (2013)
 Software for Computing and Annotating Genomic Ranges. PLoS Comput Biol
@@ -1381,6 +1413,33 @@ object(s)</em>. R package version 3.2.2.</li>
 <li>Team BC, Maintainer BP (2022).
 <em>TxDb.Hsapiens.UCSC.hg38.knownGene: Annotation package for TxDb
 object(s)</em>. R package version 3.15.0.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Dmelanogaster.UCSC.dm6.ensGene: Annotation package for TxDb
+object(s)</em>. R package version 3.12.0.</li>
+<li>Team BC, Maintainer BP (2019).
+<em>TxDb.Rnorvegicus.UCSC.rn6.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.4.6.</li>
+<li>Team BC, Maintainer BP (2019). <em>TxDb.Celegans.UCSC.ce11.refGene:
+Annotation package for TxDb object(s)</em>. R package version
+3.4.6.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Btaurus.UCSC.bosTau8.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.12.0.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Cfamiliaris.UCSC.canFam3.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.11.0.</li>
+<li>Team BC, Maintainer BP (2019).
+<em>TxDb.Drerio.UCSC.danRer10.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.4.6.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Ggallus.UCSC.galGal4.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.12.0.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Mmulatta.UCSC.rheMac8.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.12.0.</li>
+<li>Team BC, Maintainer BP (2020).
+<em>TxDb.Ptroglodytes.UCSC.panTro4.refGene: Annotation package for TxDb
+object(s)</em>. R package version 3.12.0.</li>
 </ul>
 <p>dplyr and tidyr (for data manipulation)</p>
 <ul>
@@ -1493,7 +1552,7 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [3] RColorBrewer_1.1-3                       
 ##  [4] ggcorrplot_0.1.4                         
 ##  [5] colorspace_2.0-3                         
-##  [6] plotmics_7.0.0                           
+##  [6] plotmics_7.0.1                           
 ##  [7] marge_0.0.4.9999                         
 ##  [8] ggseqlogo_0.1                            
 ##  [9] limma_3.52.4                             
@@ -1526,11 +1585,11 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ## [36] ggrepel_0.9.2                            
 ## [37] ggpubr_0.4.0                             
 ## [38] forcats_0.5.2                            
-## [39] stringr_1.4.1                            
-## [40] dplyr_1.0.10                             
-## [41] purrr_0.3.5                              
+## [39] stringr_1.5.0                            
+## [40] dplyr_1.1.0                              
+## [41] purrr_1.0.1                              
 ## [42] readr_2.1.3                              
-## [43] tidyr_1.2.1                              
+## [43] tidyr_1.3.0                              
 ## [44] tibble_3.1.8                             
 ## [45] ggplot2_3.4.0                            
 ## [46] tidyverse_1.3.2                          
@@ -1583,7 +1642,7 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [52] RBGL_1.72.0              plyr_1.8.7               cellranger_1.1.0        
 ##  [55] AnnotationFilter_1.20.0  pillar_1.8.1             gplots_3.1.3            
 ##  [58] GlobalOptions_0.1.2      cachem_1.0.6             fs_1.5.2                
-##  [61] GetoptLong_1.0.5         vctrs_0.5.0              ellipsis_0.3.2          
+##  [61] GetoptLong_1.0.5         vctrs_0.5.2              ellipsis_0.3.2          
 ##  [64] generics_0.1.3           foreign_0.8-83           munsell_0.5.0           
 ##  [67] tweenr_2.0.2             fgsea_1.22.0             DelayedArray_0.22.0     
 ##  [70] fastmap_1.1.0            compiler_4.2.1           abind_1.4-5             
