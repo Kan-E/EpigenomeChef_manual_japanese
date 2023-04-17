@@ -27,32 +27,25 @@ Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](ht
 注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
 HOMER human (hg19)対応 (required storage size: 18Gb)
 ```
-docker pull kanetoh1030/shiny-epigenomechef:hg19v0.0.2
+docker pull omicschef/epigenomechef:hg19v1.0.0-beta
 ```
 
 HOMER mouse (mm10)対応 (required storage size: 17Gb)
 ```
-docker pull kanetoh1030/shiny-epigenomechef:mm10v0.0.2
+docker pull omicschef/epigenomechef:mm10v1.0.0-beta
 ```
 
-HOMER fly (dm6) and worm (ce11)対応 (required storage size: 8Gb)
-```
-docker pull kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2
-```
 
 **2. コンテナの作成**（実行コマンドの入力）<br>
 HOMER human (hg19)対応 
 ```
-docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:hg19v0.0.2
+docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.0-beta
 ```
 HOMER mouse (mm10)対応 
 ```
-docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:mm10v0.0.2
+docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.0-beta
 ```
-HOMER fly (dm6) and worm (ce11)対応 
-```
-docker run --rm -p 3838:3838 kanetoh1030/shiny-epigenomechef:dm6ce11v0.0.2
-```
+
 
 **ブラウザで[http://localhost:3838](http://localhost:3838)を立ち上げる**。<br>
 解析終了後はコンテナを削除してください。<br>
