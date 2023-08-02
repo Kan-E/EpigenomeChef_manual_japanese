@@ -4,8 +4,28 @@ library(Rsamtools)
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(TxDb.Dmelanogaster.UCSC.dm6.ensGene)
+library(TxDb.Rnorvegicus.UCSC.rn6.refGene)
+library(TxDb.Celegans.UCSC.ce11.refGene)
+library(TxDb.Btaurus.UCSC.bosTau8.refGene)
+library(TxDb.Cfamiliaris.UCSC.canFam3.refGene)
+library(TxDb.Drerio.UCSC.danRer10.refGene)
+library(TxDb.Ggallus.UCSC.galGal4.refGene)
+library(TxDb.Mmulatta.UCSC.rheMac8.refGene)
+library(TxDb.Ptroglodytes.UCSC.panTro4.refGene)
 library(org.Hs.eg.db)
 library(org.Mm.eg.db)
+library(org.Rn.eg.db)
+library(org.Dm.eg.db)
+library(org.Ce.eg.db)
+library(org.Xl.eg.db)
+library(org.Bt.eg.db)
+library(org.Cf.eg.db)
+library(org.Dr.eg.db)
+library(org.Gg.eg.db)
+library(org.Mmu.eg.db)
+library(org.Pt.eg.db)
+library(biomaRt)
 library(shiny)
 library(DT)
 library(gdata)
@@ -47,16 +67,29 @@ library(plotmics)
 library(colorspace)
 library(ggcorrplot)
 library(RColorBrewer)
-library(bedtorch)
+
+library(venn)
+library(reshape2)
+library(ggsci)
+library(ggrastr) ##devtools::install_github('VPetukhov/ggrastr')
+library(EnrichedHeatmap)
+library(pdftools)
+library(magick)
+library(webshot)
+Sys.setenv(OPENSSL_CONF="/dev/null")
 options('homer_path' = "/usr/local/homer")
 check_homer()
+jscode <- "shinyjs.closeWindow = function() { window.close(); }"
 options(rsconnect.max.bundle.size=31457280000000000000)
-species_list <- c("not selected", "Mus musculus (mm10)","Homo sapiens (hg19)","Homo sapiens (hg38)")
+species_list <- c("not selected", "Homo sapiens (hg19)","Homo sapiens (hg38)","Mus musculus (mm10)",
+                  "Rattus norvegicus (rn6)","Drosophila melanogaster (dm6)","Caenorhabditis elegans (ce11)",
+                  "Bos taurus (bosTau8)","Canis lupus familiaris (canFam3)","Danio rerio (danRer10)",
+                  "Gallus gallus (galGal4)","Macaca mulatta (rheMac8)","Pan troglodytes (panTro4)")
 gene_set_list <- c("MSigDB Hallmark", "KEGG", "Reactome", "PID (Pathway Interaction Database)",
                    "BioCarta","WikiPathways", "GO biological process", 
                    "GO cellular component","GO molecular function", "Human phenotype ontology", 
                    "DoRothEA regulon (activator)", "DoRothEA regulon (repressor)",
-                   "Transcription factor targets", "miRNA target")
+                   "Transcription factor targets", "miRNA target","Position")
 gene_set_list_genome <- c("MSigDB Hallmark", "KEGG", "Reactome", "PID (Pathway Interaction Database)",
                    "BioCarta","WikiPathways", "GO biological process", 
                    "GO cellular component","GO molecular function", "Human phenotype ontology", 
@@ -66,20 +99,114 @@ org <- function(Species){
     switch (Species,
             "Homo sapiens (hg38)" = org <- org.Hs.eg.db,
             "Homo sapiens (hg19)" = org <- org.Hs.eg.db,
-            "Mus musculus (mm10)" = org <- org.Mm.eg.db
+            "Mus musculus (mm10)" = org <- org.Mm.eg.db,
+            "Drosophila melanogaster (dm6)" = org <- org.Dm.eg.db,
+            "Rattus norvegicus (rn6)" = org <- org.Rn.eg.db,
+            "Caenorhabditis elegans (ce11)" = org <- org.Ce.eg.db,
+            "Bos taurus (bosTau8)" = org <- org.Bt.eg.db,
+            "Canis lupus familiaris (canFam3)" = org <- org.Cf.eg.db,
+            "Danio rerio (danRer10)" = org <- org.Dr.eg.db,
+            "Gallus gallus (galGal4)" = org <- org.Gg.eg.db,
+            "Macaca mulatta (rheMac8)" = org <- org.Mmu.eg.db,
+            "Pan troglodytes (panTro4)" = org <- org.Pt.eg.db,
+            "Saccharomyces cerevisiae (sacCer3)" = org <- org.Sc.sgd.db,
+            "Xenopus laevis (xenLae2)" = org <- org.Xl.eg.db,
+            "Arabidopsis thaliana (tair10)" = org <- org.At.tair.db
             )
     return(org)
   }
 }
-
+read_df <- function(tmp, Species=NULL){
+  if(is.null(tmp)) {
+    return(NULL)
+  }else{
+    if(tools::file_ext(tmp) == "xlsx") df <- read.xls(tmp, header=TRUE, row.names = 1)
+    if(tools::file_ext(tmp) == "csv") df <- read.csv(tmp, header=TRUE, sep = ",", row.names = 1,quote = "")
+    if(tools::file_ext(tmp) == "txt" || tools::file_ext(tmp) == "tsv") df <- read.table(tmp, header=TRUE, sep = "\t", row.names = 1,quote = "")
+    rownames(df) = gsub("\"", "", rownames(df))
+    rownames(df) = gsub(":", ".", rownames(df))
+    rownames(df) = gsub("\\\\", ".", rownames(df))
+    if(length(grep("SYMBOL", colnames(df))) != 0){
+      df <- df[, - which(colnames(df) == "SYMBOL")]
+    }
+    if(length(colnames(df)) != 0){
+      if(str_detect(colnames(df)[1], "^X\\.")){
+        colnames(df) = str_sub(colnames(df), start = 3, end = -2) 
+      }
+    }
+    return(df)
+  }
+}
+read_dfs <- function(tmp, Species=NULL){
+  name = c()
+  upload = list()
+  for(nr in 1:length(tmp[, 1])){
+    df <- read_df(tmp[[nr, 'datapath']])
+    file_name <- gsub(paste0("\\.",tools::file_ext(tmp[[nr, 'datapath']]),"$"), "", tmp[nr,]$name)
+    name <- c(name, file_name)
+    upload[[nr]] <- df
+  }
+  names(upload) <- name
+  return(upload)
+}
 txdb_function <- function(Species){
+  if(Species == "Xenopus laevis (xenLae2)"){
+    xenLae2<-makeTxDbFromUCSC(genome="xenLae2", tablename="ncbiRefSeq",
+                              transcript_ids=NULL,
+                              circ_seqs=NULL,
+                              url="http://genome.ucsc.edu/cgi-bin/",
+                              goldenPath.url=getOption("UCSC.goldenPath.url"),
+                              taxonomyId=NA,
+                              miRBaseBuild=NA)
+  }
   switch (Species,
           "Mus musculus (mm10)" = txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene,
           "Homo sapiens (hg19)" = txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene,
-          "Homo sapiens (hg38)" = txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene)
+          "Homo sapiens (hg38)" = txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene,
+          "Drosophila melanogaster (dm6)" = txdb <- TxDb.Dmelanogaster.UCSC.dm6.ensGene,
+          "Rattus norvegicus (rn6)" = txdb <- TxDb.Rnorvegicus.UCSC.rn6.refGene,
+          "Caenorhabditis elegans (ce11)" = txdb <- TxDb.Celegans.UCSC.ce11.refGene,
+          "Bos taurus (bosTau8)" = txdb <- TxDb.Btaurus.UCSC.bosTau8.refGene,
+          "Canis lupus familiaris (canFam3)" = txdb <- TxDb.Cfamiliaris.UCSC.canFam3.refGene,
+          "Danio rerio (danRer10)" = txdb <- TxDb.Drerio.UCSC.danRer10.refGene,
+          "Gallus gallus (galGal4)" = txdb <- TxDb.Ggallus.UCSC.galGal4.refGene,
+          "Macaca mulatta (rheMac8)" = txdb <- TxDb.Mmulatta.UCSC.rheMac8.refGene,
+          "Pan troglodytes (panTro4)" = txdb <- TxDb.Ptroglodytes.UCSC.panTro4.refGene,
+          "Saccharomyces cerevisiae (sacCer3)" = txdb <- TxDb.Scerevisiae.UCSC.sacCer3.sgdGene,
+          "Xenopus laevis (xenLae2)" = txdb <- xenLae2,
+          "Arabidopsis thaliana (tair10)" = txdb <- TxDb.Athaliana.BioMart.plantsmart51)
   return(txdb)
 }
-
+files_name2ENTREZID <- function(files,Species,gene_type){
+  df2 <- list()
+  if(!is.null(gene_type)){
+  for (name in names(files)) {
+    count <- files[[name]]
+    if(!is.na(suppressWarnings(as.numeric(rownames(count)[1]))) == TRUE){
+      df2[[name]] <- count
+    }else{
+      if(gene_type[name] != "SYMBOL"){
+        if(str_detect(rownames(count)[1], "FBgn")){
+          count$ENTREZID <- rownames(count)
+          count2 <- count
+        }else{
+        my.symbols <- gsub("\\..*","", rownames(count))
+        gene_id <-id_convert(my.symbols,Species = Species,type = "ENSEMBL2ENTREZID")
+        gene_id <- gene_id %>% distinct(ENSEMBL, .keep_all = T) %>% na.omit()
+        gene_id <- data.frame(ENTREZID = gene_id$ENTREZID, row.names = gene_id$ENSEMBL)
+        count2 <- merge(gene_id,count,by=0)
+        }
+      }else{
+        #symbol
+        count2 <- symbol2gene_id(data = count,org=org(Species))
+        colnames(count2)[1]<-"ENTREZID"
+      }
+      df2[[name]] <- count2
+    }
+  }
+  return(df2)
+  }
+}
 promoter <- function(txdb, upstream, downstream,input_type = "Promoter",files = NULL, bam=F,RPM){
   if(input_type == "Promoter"){
   return(promoters(genes(txdb),upstream = upstream, downstream = downstream))
@@ -104,8 +231,8 @@ promoter_clustering <- function(txdb, upstream, downstream,input_type = "Promote
 
 Bigwig2count <- function(bw, promoter, Species, input_type = "Promoter"){
 bed1<-promoter
-write.table(bed1,file = "bed.bed",sep = "\t")
-bed1 <- read.table("bed.bed",header = T)
+write.table(bed1,file = paste0(tempdir(),"bed.bed"),sep = "\t")
+bed1 <- read.table(paste0(tempdir(),"bed.bed"),header = T)
 bed1 <- dplyr::arrange(bed1, seqnames)
 data <- as.data.frame(bed1)[,1:3]
 colnames(data)<-c("chr","start","end")
@@ -118,7 +245,10 @@ withProgress(message = "converting BigWig to gene count data",{
 for(i in seq_len(length(bw))) {
     perc <- perc + 1
   last=1 	 
-  coverage <- import(bw[[i]], as = 'RleList')
+  coverage <- try(import(bw[[i]], as = 'RleList'))
+  if(class(coverage) == "try-error") {
+    validate(paste0("Error: the uploaded bigwig files are in an unexpected format. The original error message is as follows:\n",print(coverage)))
+  }
   for(j in chromnames){
     range_vals=ranges(bed[seqnames(bed)==j])
     cur_coverage=coverage[[j]] 
@@ -135,13 +265,11 @@ for(i in seq_len(length(bw))) {
 }
 })
 if(input_type == "Promoter"){
-  switch (Species,
-          "Mus musculus (mm10)" = org <- org.Mm.eg.db,
-          "Homo sapiens (hg19)" = org <- org.Hs.eg.db,
-          "Homo sapiens (hg38)" = org <- org.Hs.eg.db)
+  or <- org(Species)
   rownames(counts) <- bed1$gene_id
+  if(!str_detect(rownames(counts)[1], "FBgn")){
 my.symbols <- rownames(counts)
-gene_IDs<-AnnotationDbi::select(org,keys = my.symbols,
+gene_IDs<-AnnotationDbi::select(or,keys = my.symbols,
                                 keytype = "ENTREZID",
                                 columns = c("ENTREZID","SYMBOL"))
 colnames(gene_IDs) <- c("Row.names","SYMBOL")
@@ -150,6 +278,7 @@ gene_IDs <- data.frame(SYMBOL = gene_IDs$SYMBOL, row.names = gene_IDs$Row.names)
 data2 <- merge(gene_IDs,counts, by=0)
 rownames(data2) <- data2$SYMBOL
 counts <- data2[,-1:-2]
+}
 }else{
   a <- as.data.frame(bed)
   Row.name <- paste0(a$seqnames,":",a$start,"-",a$end)
@@ -238,7 +367,7 @@ GOIheatmap <- function(data.z, show_row_names = TRUE){
   ht <- Heatmap(data.z, name = "z-score",column_order = colnames(data.z),
                 clustering_method_columns = 'ward.D2',
                 show_row_names = show_row_names, show_row_dend = F,column_names_side = "top",
-                row_names_gp = gpar(fontface = "italic"))
+                row_names_gp = gpar(fontface = "italic"),use_raster = TRUE)
   return(ht)
 }
 
@@ -275,17 +404,18 @@ dotplot_for_output <- function(data, plot_genelist, Gene_set, Species){
   }
 }
 GeneList_for_enrichment <- function(Species, Gene_set, org, Custom_gene_list){
-  if(Species != "not selected" || is.null(Gene_set) || is.null(org)){
-    switch (Species, 
-            "Mus musculus (mm10)" = species <- "Mus musculus",
-            "Homo sapiens (hg19)" = species <- "Homo sapiens",
-            "Homo sapiens (hg38)" = species <- "Homo sapiens")
+  if(Species != "not selected" && !is.null(Gene_set) && !is.null(org)){
+    species <- substr(gsub("\\(.+$","",Species),1,nchar(gsub("\\(.+$","",Species))-1)
     if(Gene_set == "MSigDB Hallmark"){
       H_t2g <- msigdbr(species = species, category = "H") %>%
-        dplyr::select(gs_name, entrez_gene, gs_id, gs_description) 
+        dplyr::select(gs_name, entrez_gene, gs_id, gs_description,ensembl_gene) 
       H_t2g["gs_name"] <- lapply(H_t2g["gs_name"], gsub, pattern="HALLMARK_", replacement = "")
       H_t2g$gs_name <- H_t2g$gs_name %>% str_to_lower() %>% str_to_title()
       H_t2g["gs_name"] <- lapply(H_t2g["gs_name"], gsub, pattern="P53", replacement = "p53")
+    }
+    if(Gene_set == "Position"){
+      H_t2g <- msigdbr(species = species, category = "C1") %>%
+        dplyr::select(gs_name, entrez_gene, gs_id, gs_description) 
     }
     if(Gene_set == "KEGG"){
       H_t2g <- msigdbr(species = species, category = "C2", subcategory = "CP:KEGG") %>%
@@ -391,14 +521,26 @@ GeneList_for_enrichment <- function(Species, Gene_set, org, Custom_gene_list){
     H_t2g["gs_name"] <- lapply(H_t2g["gs_name"], gsub, pattern="_jak", replacement = "_JAK")
     H_t2g["gs_name"] <- lapply(H_t2g["gs_name"], gsub, pattern="_stat", replacement = "_STAT")
     H_t2g["gs_name"] <- lapply(H_t2g["gs_name"], gsub, pattern="_nfkb", replacement = "_NFkB")
+    print(head(H_t2g))
+    print(species)
     return(H_t2g)
   }else return(NULL)
 }
-gene_list_for_enrichment_genome <- function(H_t2g){
+gene_list_for_enrichment_genome <- function(H_t2g, Species=NULL){
   df <- list()
   set <- unique(H_t2g$gs_name)
   for(name in set){
     data <- dplyr::filter(H_t2g, gs_name == name)
+    if(Species == "Drosophila melanogaster (dm6)"){
+      column <- c("ENTREZID", "ENSEMBL")
+      key <- "ENTREZID"
+    gene_IDs<-AnnotationDbi::select(org(Species),keys = as.character(data$entrez_gene),
+                                    keytype = key,
+                                    columns = column)
+    colnames(gene_IDs) <- c("entrez_gene","ENSEMBL")
+    data <- gene_IDs %>% distinct(ENSEMBL, .keep_all = T)
+    df[[name]] <- data$ENSEMBL
+    }
     df[[name]] <- data$entrez_gene
   }
   return(df)
@@ -424,6 +566,36 @@ dorothea <- function(species, confidence = "recommend",type){
   net2 <- merge(net2, gene_IDs, by="target")
   net3 <- data.frame(gs_name = net2$tf, entrez_gene = net2$ENTREZID, target = net2$target, confidence = net2$confidence)
   net3 <- dplyr::arrange(net3, gs_name)
+  if(species != "Mus musculus (mm10)" && species != "Homo sapiens (hg19)" && 
+     species != "Homo sapiens (hg38)"){
+    withProgress(message = paste0("Gene ID conversion from human to ", species, "for the regulon gene set. It takes a few minutes."),{
+      genes <- net3$entrez_gene
+      switch (species,
+              "Rattus norvegicus (rn6)" = set <- "rnorvegicus_gene_ensembl",
+              "Xenopus tropicalis" = set <- "xtropicalis_gene_ensembl",
+              "Drosophila melanogaster (dm6)" = set <- "dmelanogaster_gene_ensembl",
+              "Caenorhabditis elegans (ce11)" = set <- "celegans_gene_ensembl",
+              "Bos taurus (bosTau8)" = set <- "btaurus_gene_ensembl",
+              "Canis lupus familiaris" = set <- "clfamiliaris_gene_ensembl",
+              "Danio rerio (danRer10)" = set <- "drerio_gene_ensembl",
+              "Gallus gallus (galGal4)" = set <- "ggallus_gene_ensembl",
+              "Macaca mulatta (rheMac8)" = set <- "mmulatta_gene_ensembl",
+              "Pan troglodytes (panTro4)" = set <- "ptroglodytes_gene_ensembl",
+              "Saccharomyces cerevisiae (sacCer3)" = set <-"scerevisiae_gene_ensembl",
+              "Arabidopsis thaliana (tair10)" = set <- "athaliana_eg_gene")
+      convert = useMart("ensembl", dataset = set, host="https://dec2021.archive.ensembl.org")
+      human = useMart("ensembl", dataset = "hsapiens_gene_ensembl", host="https://dec2021.archive.ensembl.org")
+      genes2 = getLDS(attributes = c("entrezgene_id"), filters = "entrezgene_id",
+                      values = genes ,mart = human,
+                      attributesL = c("entrezgene_id"),
+                      martL = convert, uniqueRows=T)
+      colnames(genes2) <- c("entrez_gene", "converted_entrez_gene")
+      genes2 <- genes2 %>% distinct(converted_entrez_gene, .keep_all = T)
+      merge <- merge(net3, genes2, by = "entrez_gene") 
+      net3 <- data.frame(gs_name = merge$gs_name, entrez_gene = merge$converted_entrez_gene, confidence = merge$confidence)
+      net3 <- dplyr::arrange(net3, gs_name)
+    })
+  }
   return(net3)
 }
 cnet_for_output <- function(data, plot_data, Gene_set, Species){
@@ -550,10 +722,7 @@ read_known_results<-function (path, homer_dir = TRUE) {
                     by = c("motif_name", "motif_family", "experiment", "accession"))
 }   
 findMotif <- function(df,anno_data = NULL,Species,type = "Genome-wide",motif,size,back="random",bw_count=NULL,other_data=NULL){
-    switch(Species,
-           "Mus musculus (mm10)" = ref <- "mm10",
-           "Homo sapiens (hg19)" = ref <- "hg19",
-           "Homo sapiens (hg38)" = ref <- "hg38")
+  ref <- gsub(".+\\(","",gsub(")", "", Species))
     switch(motif,
            "known motif" = time <- "10 ~ 20",
            "known and de novo motifs" = time <- "20 ~ 30")
@@ -567,7 +736,7 @@ findMotif <- function(df,anno_data = NULL,Species,type = "Genome-wide",motif,siz
     }
     perc <- 0
     df2 <- list()
-    path <- format(Sys.time(), "%Y%m%d_%H%M_homer")
+    path <- paste0(format(Sys.time(), "%Y%m%d_%H%M_homer_"),back,"_size-",size)
     dir.create(path = path)
     print(group_name)
     for(name in group_name){
@@ -598,6 +767,8 @@ findMotif <- function(df,anno_data = NULL,Species,type = "Genome-wide",motif,siz
           data <- anno_data %>% dplyr::filter(! locus %in% rownames(data))
           data2 <- range_changer(data)
           bg <- data.frame(seqnames = data2$chr,start=data2$start,end=data2$end)
+          write.table(bg,paste0(tempdir(),"bed.bed"),row.names = F,col.names = F,quote = F, sep = "\t")
+          bg <- paste0(tempdir(),"bed.bed")
         }
           }
         if(type== "Promoter") {
@@ -606,15 +777,16 @@ findMotif <- function(df,anno_data = NULL,Species,type = "Genome-wide",motif,siz
           bg <- with(bg, GRanges(seqnames = seqnames, 
                               ranges = IRanges(start,end)))
           bg <- as.data.frame(bg)
+          write.table(bg,paste0(tempdir(),"bed.bed"),row.names = F,col.names = F,quote = F, sep = "\t")
+          bg <- paste0(tempdir(),"bed.bed")
         }
         if(type=="Other"){
           if(back == "random"){
             bg <-'automatic'
           }else{
-            z <- with(y, GRanges(seqnames = seqnames, 
-                                 ranges = IRanges(start,end)))
-            bg <- exclude_bed(other_data,z)
-            bg <- as.data.frame(bg)
+            bg <- as.data.frame(other_data)
+            write.table(bg,paste0(tempdir(),"bed.bed"),row.names = F,col.names = F,quote = F, sep = "\t")
+            bg <- paste0(tempdir(),"bed.bed")
           }
             }
         print(head(bg))
@@ -673,7 +845,7 @@ denovo_motif <- function(df){
 }
 
 
-homer_Motifplot <- function(df, showCategory=5){
+homer_Motifplot <- function(df, showCategory=5,section=NULL){
   df2 <- data.frame(matrix(rep(NA, 15), nrow=1))[numeric(0), ]
 
   for(name in names(df)){
@@ -695,6 +867,20 @@ homer_Motifplot <- function(df, showCategory=5){
   }else{
     colnames(df2) <- c("motif_name", "motif_family", "experiment", "accession", "database", "consensus", "p_value",
                        "fdr", "tgt_num", "tgt_pct", "bgd_num", "bgd_pct","motif_pwm","log_odds_detection","Group")
+    if(!is.null(section)){
+      if(section == "venn"){
+        df2$Group <- gsub("- ", "- ", df2$Group)
+        for(i in 1:length(df2$Group)){
+          df2$Group[i] <- paste(strwrap(df2$Group[i], width = 15),collapse = "\n")
+        }
+      }else{
+        df2$Group <- gsub("_", " ", df2$Group)
+        for(i in 1:length(df2$Group)){
+          df2$Group[i] <- paste(strwrap(df2$Group[i], width = 15),collapse = "\n")
+        }
+      }
+      df2$Group <- gsub(" \\(", "\n\\(", df2$Group)
+    }
     df2 <- dplyr::mutate(df2, x = paste0(Group, 1/-log10(eval(parse(text = "p_value")))))
     df2$x <- gsub(":","", df2$x)
     df2 <- dplyr::arrange(df2, x)
@@ -774,10 +960,13 @@ integrate_ChIP_RNA <- function (result_geneRP, result_geneDiff, lfc_threshold = 
             call. = FALSE)
     return(merge_result)
   }
+  #bonfferoni correction
   up_static_pvalue <- suppressWarnings(ks.test(upGenes_rank, 
-                                               staticGenes_rank)$p.value)
+                                               staticGenes_rank)$p.value * 2)
+  if(up_static_pvalue > 1) up_static_pvalue <- 1
   down_static_pvalue <- suppressWarnings(ks.test(downGenes_rank, 
-                                                 staticGenes_rank)$p.value)
+                                                 staticGenes_rank)$p.value * 2)
+  if(down_static_pvalue > 1) down_static_pvalue <- 1
   ks_test <- paste0("\n Kolmogorov-Smirnov Tests ", "\n pvalue of up vs NS: ", 
                     format(up_static_pvalue, digits = 3, scientific = TRUE), 
                     "\n pvalue of down vs NS: ", format(down_static_pvalue, 
@@ -924,7 +1113,10 @@ enrich_for_table <- function(data, H_t2g, Gene_set){
   }
 }
 symbol2gene_id <- function(data,org){
-  my.symbols <- rownames(data)
+  if(str_detect(rownames(data)[1], "FBgn")) {
+    data$gene_id <- rownames(data)
+  }else{
+    my.symbols <- rownames(data)
   gene_IDs<-AnnotationDbi::select(org,keys = my.symbols,
                                   keytype = "SYMBOL",
                                   columns = c("SYMBOL","ENTREZID"))
@@ -932,18 +1124,25 @@ symbol2gene_id <- function(data,org){
   gene_IDs <- gene_IDs %>% distinct(SYMBOL, .keep_all = T) %>% na.omit()
   gene_IDs <- data.frame(gene_id = gene_IDs$gene_id, row.names = gene_IDs$SYMBOL)
   data <- merge(gene_IDs,data,by=0)
+  rownames(data)<-data$Row.names
   data <- data[,-1]
+  }
   return(data)
 }
 
 data_trac <- function(y,gene_position,gen,txdb,org,filetype=NULL,bw_files,
                       bam_files,track_additional_files){
-  chr <- gene_position$seqnames
+  chr <- as.character(gene_position$seqnames)
+  print(chr)
+  print(gen)
   grtrack <- GeneRegionTrack(txdb,
                              chromosome = chr, name = "UCSC known genes",geneSymbol = TRUE,
                              transcriptAnnotation = "symbol",genome = gen,
                              background.title = "grey",cex = 1.25)
-  symbols <- unlist(mapIds(org, gene(grtrack), "SYMBOL", "ENTREZID", multiVals = "first"))
+  if(gen != "dm6"){
+    ID <- "ENTREZID"
+  }else ID <- "ENSEMBL"
+  symbols <- unlist(mapIds(org, gene(grtrack), "SYMBOL", ID, multiVals = "first"))
   symbol(grtrack) <- symbols[gene(grtrack)]
   displayPars(grtrack) <- list(fontsize = 15)
   if(!is.null(filetype)){
@@ -999,26 +1198,27 @@ RNAseqDEGimport <- function(tmp,exampleButton){
     }
   })
 }
-RNAseqDEG_ann <- function(RNAdata,org){
+RNAseqDEG_ann <- function(RNAdata,Species,gene_type){
   RNAdata$log2FoldChange <- -RNAdata$log2FoldChange
-  if(str_detect(rownames(RNAdata)[1], "ENS")){
+  if(str_detect(rownames(RNAdata)[1], "FBgn")){
+    RNAdata$gene_id <- rownames(RNAdata)
+    data <- RNAdata
+  }else{
+  if(gene_type != "SYMBOL"){
     my.symbols <- gsub("\\..*","", rownames(RNAdata))
-    gene_IDs<-AnnotationDbi::select(org,keys = my.symbols,
-                                    keytype = "ENSEMBL",
-                                    columns = c("ENSEMBL","SYMBOL","ENTREZID"))
+    gene_IDs<-id_convert(my.symbols,Species,type="ENSEMBL")
     colnames(gene_IDs) <- c("EnsemblID","Symbol","gene_id")
     RNAdata$EnsemblID <- gsub("\\..*","", rownames(RNAdata))
     gene_IDs <- gene_IDs %>% distinct(EnsemblID, .keep_all = T)
   }else{
     my.symbols <- rownames(RNAdata)
-    gene_IDs<-AnnotationDbi::select(org,keys = my.symbols,
-                                    keytype = "SYMBOL",
-                                    columns = c("SYMBOL", "ENTREZID"))
+    gene_IDs<-id_convert(my.symbols, Species,type="SYMBOL_single")
     colnames(gene_IDs) <- c("Symbol", "gene_id")
     gene_IDs <- gene_IDs %>% distinct(Symbol, .keep_all = T)
     RNAdata$Symbol <- rownames(RNAdata) 
   }
   data <- merge(RNAdata, gene_IDs, by="Symbol")
+  }
   return(data)
 }
 mmAnno <- function(peak,genomic_region=NULL,txdb,peak_distance){
@@ -1061,8 +1261,8 @@ GetGRanges <- function (LoadFile, simple = FALSE,sepr = "\t", simplify = FALSE) 
     if (sum(class(LoadFile) == "character")) {
       RangesTable <- read.delim(LoadFile, sep = sepr, header = FALSE, 
                                 comment.char = "#")
-      if(str_detect(RangesTable[1,2], "tart") == TRUE) {
-        RangesTable <- RangesTable[-1]
+      if(str_detect(RangesTable[1,2], "tart") == TRUE || is.na(RangesTable[1,2])) {
+        RangesTable <- RangesTable[-1,]
       }else RangesTable <- RangesTable
     }
     Chromosomes <- as.vector(RangesTable[, 1])
@@ -1088,4 +1288,308 @@ GetGRanges <- function (LoadFile, simple = FALSE,sepr = "\t", simplify = FALSE) 
       }
     }
   return(RegionRanges)
+}
+
+id_convert <- function(my.symbols,Species,type){
+  if(Species != "Drosophila melanogaster (dm6)") {
+    if(type == "ENTREZID"){
+      column <- c("SYMBOL", "ENTREZID")
+      key <- "ENTREZID"
+    }
+    if(type == "SYMBOL_single"){
+      column <- "ENTREZID"
+      key <- "SYMBOL"
+    }
+    if(type == "SYMBOL_double"){
+      column <- c("SYMBOL", "ENTREZID")
+      key <- "SYMBOL"
+    }
+    if(type == "ENSEMBL"){
+      column <- c("ENSEMBL","SYMBOL","ENTREZID")
+      key <- "ENSEMBL"
+    }
+    if(type == "ENSEMBL2ENTREZID"){
+      column <- c("ENSEMBL","ENTREZID")
+      key <- "ENSEMBL"
+    }
+  }else {
+    if(type == "ENTREZID"){
+    column <- c("SYMBOL", "ENSEMBL")
+    key <- "ENSEMBL"
+    }
+    if(type == "SYMBOL_single"){
+      column <- "ENSEMBL"
+      key <- "SYMBOL"
+    }
+    if(type == "SYMBOL_double"){
+      column <- c("SYMBOL", "ENSEMBL")
+      key <- "ENSEMBL"
+    }
+    if(type == "ENSEMBL"){
+      column <- c("ENSEMBL","SYMBOL")
+      key <- "ENSEMBL"
+    }
+    if(type == "ENSEMBL2ENTREZID"){
+      column <- c("ENSEMBL","ENTREZID")
+      key <- "ENSEMBL"
+    }
+  }
+  gene_IDs<-AnnotationDbi::select(org(Species),keys = my.symbols,
+                                  keytype = key,
+                                  columns = column)
+  if(Species == "Drosophila melanogaster (dm6)" && type == "ENSEMBL") gene_IDs$ENTREZID <- gene_IDs$ENSEMBL
+  return(gene_IDs)
+}
+ref_for_GREAT <- function(Species){
+  switch (Species,
+          "Mus musculus (mm10)" = source <- "TxDb.Mmusculus.UCSC.mm10.knownGene",
+          "Homo sapiens (hg19)" = source <- "TxDb.Hsapiens.UCSC.hg19.knownGene",
+          "Homo sapiens (hg38)" = source <- "TxDb.Hsapiens.UCSC.hg38.knownGene",
+          "Drosophila melanogaster (dm6)" = source <- "TxDb.Dmelanogaster.UCSC.dm6.ensGene",
+          "Rattus norvegicus (rn6)" = source <- "TxDb.Rnorvegicus.UCSC.rn6.refGene",
+          "Caenorhabditis elegans (ce11)" = source <- "TxDb.Celegans.UCSC.ce11.refGene",
+          "Bos taurus (bosTau8)" = source <- "TxDb.Btaurus.UCSC.bosTau8.refGene",
+          "Canis lupus familiaris (canFam3)" = source <- "TxDb.Cfamiliaris.UCSC.canFam3.refGene",
+          "Danio rerio (danRer10)" = source <- "TxDb.Drerio.UCSC.danRer10.refGene",
+          "Gallus gallus (galGal4)" = source <- "TxDb.Ggallus.UCSC.galGal4.refGene",
+          "Macaca mulatta (rheMac8)" = source <- "TxDb.Mmulatta.UCSC.rheMac8.refGene",
+          "Pan troglodytes (panTro4)" = source <- "TxDb.Ptroglodytes.UCSC.panTro4.refGene",
+          "Saccharomyces cerevisiae (sacCer3)" = source <- "TxDb.Scerevisiae.UCSC.sacCer3.sgdGene",
+          "Xenopus laevis (xenLae2)" = source <- "xenLae2",
+          "Arabidopsis thaliana (tair10)" = source <- "TxDb.Athaliana.BioMart.plantsmart51")
+  return(source)
+}
+ggVennPeaks <- function (peak_list, peak_names = names(peak_list), percent = TRUE, 
+          stranded = FALSE, true_overlaps = FALSE, in_fill = c("blue", 
+                                                                     "gold3"), alpha = 0.4, out_color = "black", name_color = "black", 
+                                                                     text_color = "black", name_size = 5, label_size = 3, title = "", 
+          subtitle = "", return_peaks = FALSE) 
+{
+  suppressPackageStartupMessages(require(dplyr))
+  suppressPackageStartupMessages(require(reshape2))
+  suppressPackageStartupMessages(require(magrittr))
+  if (!is.list(peak_list)) {
+    stop("'peak_list' must be a (named) list of dataframes with, at least, the columns 'seqnames', 'start' and 'end'.")
+  }
+  if (length(peak_list) != length(peak_names)) {
+    stop("'peak_names' must be a character vector with the same length as 'peak_list'.")
+  }
+  if (stranded) {
+    if (!"strand" %in% colnames(bind_rows(peak_list))) {
+      stop("If 'stranded' is TRUE, a 'strand' column must be present in all the elements from peak list.")
+    }
+    else {
+      peak_list <- peak_list %>% purrr::map(~dplyr::mutate(.x, 
+                                                           strand = if_else(strand %in% c("\\.", "\\*", 
+                                                                                          ".", "*"), "*", strand)))
+    }
+  }
+  if (true_overlaps & length(peak_list) == 2) {
+    stranded <- FALSE
+    percent <- FALSE
+  }
+  peak_list <- peak_list %>% purrr::map(~dplyr::mutate(.x, 
+                                                       strand = if_else(strand %in% c(".", "*", "\\.", "\\*"), 
+                                                                        "*", strand)))
+  peaks1 <- peak_list[[1]] %>% plyranges::as_granges()
+  peaks2 <- peak_list[[2]] %>% plyranges::as_granges()
+  overlaps1 <- plyranges::filter_by_overlaps(peaks1, peaks2)
+  overlaps2 <- plyranges::filter_by_overlaps(peaks2, peaks1)
+  x <- getVennCounts(peaks = peak_list, conds = peak_names, 
+                     stranded = stranded)
+  y <- x$matrix %>% as_tibble() %>% magrittr::set_colnames(c("Peak", 
+                                                             paste("cond", 1:length(peak_list), sep = ""))) %>% reshape2::melt() %>% 
+    mutate(value = if_else(value == 1, Peak, NA)) %>% tidyr::pivot_wider(names_from = "variable", 
+                                                                           values_from = "value") %>% dplyr::select(-Peak) %>% dplyr::as_tibble() %>% 
+    as.list() %>% purrr::set_names(peak_names) %>% purrr::map(~na.omit(.x))
+  venn <- venn::venn(y, ilabels = TRUE, zcolor = "style", opacity = 0, ilcs = 1.5, sncs = 1.5)
+  return(venn)
+}
+
+peak_pattern_function <- function(grange, files,rg = NULL,additional=NULL,plot=TRUE){
+  feature.recentered <- reCenterPeaks(grange, width=4000)
+  if(!is.null(additional)) files <- c(files, additional)
+  cvglists <- sapply(files, import,which=feature.recentered,as="RleList")
+  names(cvglists) <- gsub(".+\\/","",gsub("\\..+$", "", names(files)))
+  feature.center <- reCenterPeaks(grange, width=1)
+  sig <- featureAlignedSignal(cvglists, feature.center,
+                              upstream=2000, downstream=2000)
+  if(plot == TRUE){
+  if(is.null(rg)){
+  rg <- c()
+  for(name in names(sig)){
+    rg <- c(rg, mean(sig[[name]][,50]))
+  }
+  rg <- max(rg) + max(rg)*0.1
+  }
+  range <- c()
+  for(n in length(names(files))) {range <- c(range, rg)}
+  heat <- featureAlignedHeatmap(sig, feature.center,
+                                upstream=2000, downstream=2000,
+                                upper.extreme=range,color = brewer.pal(n = 9, name = 'OrRd'))
+  line <- featureAlignedDistribution(sig, feature.center,
+                                     upstream=2000, downstream=2000,
+                                     type="l")
+  df <- list()
+  df[["heat"]] <- heat
+  df[["line"]] <- line
+  return(df)
+  }else return(sig)
+}
+bigwig_breakline <- function(bigwig){
+  names(bigwig) <- gsub("-", "- ", names(bigwig))
+  for(i in 1:length(names(bigwig))){
+    names(bigwig)[i] <- paste(strwrap(names(bigwig)[i], width = 15),collapse = "\n")
+  }
+  names(bigwig) <- gsub(" ", "", names(bigwig))
+  return(bigwig)
+}
+
+batch_lineplot <- function(files2,files_bw){
+  line_list <- data.frame(matrix(rep(NA, 4), nrow=1))[numeric(0), ]
+  for(k in 1:length(names(files_bw))){
+    cvg_com <- data.frame(matrix(rep(NA, 100), nrow=1))[numeric(0), ]
+    line_com <- data.frame(matrix(rep(NA, 100), nrow=1))[numeric(0), ]
+    for(i in 1:length(names(files2))){
+      cvg_list <- peak_pattern_function(grange=files2[[i]],files = files_bw[[k]],plot=F)
+      line_com <- rbind(line_com,apply(cvg_list[[1]],2,mean))
+    }
+    line_com_t <- t(line_com)
+    rownames(line_com_t) <- seq(from=-2000,to=2000,length=100)
+    colnames(line_com_t) <- names(files2)
+    y <- melt(line_com_t)
+    colnames(y) <- c("distance","bed","density")
+    y$bigwig <- names(files_bw)[[k]]
+    line_list <- rbind(line_list, y)
+  }
+  plot_list <- list()
+  g <- ggplot(line_list, aes(x = distance, y = density, color = bed))+
+    facet_wrap(~ bigwig, scales="free_y")+ labs(color = "intersection")
+  g <- g + scale_color_nejm()+ geom_line() + 
+    theme(panel.background =element_rect(fill=NA,color=NA),
+          panel.border = element_rect(fill = NA))
+  g <- g +  theme(legend.position = "top",strip.text.x = element_text(size = 15),
+                  title = element_text(size = 15),text = element_text(size = 12),
+                  axis.title.y = element_text(size=15),axis.title.x = element_text(size=15),legend.text = element_text(size=15),
+                  legend.background = element_rect(fill=NA,color=NA))
+  plot_list[["bed"]] <- g
+  g <- ggplot(line_list, aes(x = distance, y = density, color = bigwig))+
+    facet_wrap(~ bed, scales="free_y")
+  g <- g + scale_color_nejm(name=)+ geom_line() +
+    theme(panel.background =element_rect(fill=NA,color=NA),
+          panel.border = element_rect(fill = NA))
+  g <- g +  theme(legend.position = "top",strip.text.x = element_text(size = 15),
+                  title = element_text(size = 15),text = element_text(size = 12),
+                  axis.title.y = element_text(size=15),axis.title.x = element_text(size=15),legend.text = element_text(size=15),
+                  legend.background = element_rect(fill=NA,color=NA))
+  plot_list[["bigwig"]] <- g
+  return(plot_list)
+}
+pdf_h <- function(rowlist){
+  if ((length(rowlist) > 81) && (length(rowlist) <= 200)) pdf_hsize <- 24.5
+  if ((length(rowlist) > 64) && (length(rowlist) <= 81)) pdf_hsize <- 22.25
+  if ((length(rowlist) > 49) && (length(rowlist) <= 64)) pdf_hsize <- 19
+  if ((length(rowlist) > 36) && (length(rowlist) <= 49)) pdf_hsize <- 17.75
+  if ((length(rowlist) > 25) && (length(rowlist) <= 36)) pdf_hsize <- 15.5
+  if ((length(rowlist) > 16) && (length(rowlist) <= 25)) pdf_hsize <- 13.5
+  if ((length(rowlist) > 12) && (length(rowlist) <= 16)) pdf_hsize <- 11
+  if ((length(rowlist) > 9) && (length(rowlist) <= 12)) pdf_hsize <- 9
+  if ((length(rowlist) > 6) && (length(rowlist) <= 9)) pdf_hsize <- 9
+  if ((length(rowlist) > 4) && (length(rowlist) <= 6)) pdf_hsize <- 8
+  if (length(rowlist) == 4) pdf_hsize <- 8
+  if (length(rowlist) == 3) pdf_hsize <- 4
+  if (length(rowlist) == 2) pdf_hsize <- 4
+  if (length(rowlist) == 1) pdf_hsize <- 4
+  if (length(rowlist) > 200) pdf_hsize <- 30
+  return(pdf_hsize)
+}
+pdf_w <- function(rowlist){
+  if ((length(rowlist) > 81) && (length(rowlist) <= 200)) pdf_wsize <- 24.5
+  if ((length(rowlist) > 64) && (length(rowlist) <= 81)) pdf_wsize <- 22.25
+  if ((length(rowlist) > 49) && (length(rowlist) <= 64)) pdf_wsize <- 19
+  if ((length(rowlist) > 36) && (length(rowlist) <= 49)) pdf_wsize <- 17.75
+  if ((length(rowlist) > 25) && (length(rowlist) <= 36)) pdf_wsize <- 15.5
+  if ((length(rowlist) > 16) && (length(rowlist) <= 25)) pdf_wsize <- 15.5
+  if ((length(rowlist) > 12) && (length(rowlist) <= 16)) pdf_wsize <- 14
+  if ((length(rowlist) > 9) && (length(rowlist) <= 12)) pdf_wsize <- 14
+  if ((length(rowlist) > 6) && (length(rowlist) <= 9)) pdf_wsize <- 10
+  if ((length(rowlist) > 4) && (length(rowlist) <= 6)) pdf_wsize <- 12
+  if (length(rowlist) == 4) pdf_wsize <- 10
+  if (length(rowlist) == 3) pdf_wsize <- 12
+  if (length(rowlist) == 2) pdf_wsize <- 8
+  if (length(rowlist) == 1) pdf_wsize <- 4
+  if (length(rowlist) > 200) pdf_wsize <- 30
+  return(pdf_wsize)
+}
+
+batch_heatmap <- function(files2,files_bw,maxrange=NULL,type=NULL,
+                          color=c("white", "red"),signal="signal"){
+  ht_list <- NULL
+  perc <- 0
+  withProgress(message = "Preparing heatmap",{
+  for(k in 1:length(names(files_bw))){
+    perc<-perc+1
+    num_list <- c()
+    glist <- list()
+    for(i in 1:length(names(files2))){
+      feature.recentered <- reCenterPeaks(files2[[i]], width=1)
+      num <- dim(as.data.frame(feature.recentered))[1]
+      num_list <- c(num_list, rep(names(files2)[[i]],num))
+      glist[[i]] <- feature.recentered
+    }
+    target <- unlist(as(glist,"GRangesList"))
+    mat1 = normalizeToMatrix(import(files_bw[[k]],as="GRanges"), target = target, value_column = "score",
+                             extend = 2000, mean_mode = "absolute", w = 20, keep = c(0, 0.99))
+    axis_name <- c("-2000","summit","2000")
+    if(!is.null(type)){
+    if(type == "Promoter"){
+      axis_name <- c("-2000","TSS","2000")
+    }}
+    name <- gsub("\\..+$", "", names(files_bw)[[k]])
+    name <- gsub("_", " ", name)
+    name <- gsub("-", " ", name)
+    name <- paste(strwrap(name, width = 8),collapse = "\n")
+    name <- gsub(" ", "\\_", name)
+    ht <- EnrichedHeatmap(mat1, split = num_list, col = color,name=name,
+                          axis_name = axis_name,pos_line = F,
+                          column_title =name,
+                          top_annotation = HeatmapAnnotation(enriched = anno_enriched(gp = gpar(col = 1:4, lty = 1),
+                                                                                      axis_param = list(side = "right", facing = "inside"))))
+    ht_list <- ht_list + ht
+    list <- list()
+    list[["heatmap"]] <- ht_list
+    list[["mat"]] <- mat1
+    incProgress(1/length(names(files_bw)), message = paste("Finish '", names(files_bw)[k], "', ", 
+                                                            perc, "/", length(names(files_bw)),sep = ""))
+  }
+  })
+  return(list)  
+}
+lgd <- function(files2){
+  leg_name <- gsub("\\..+$", "",names(files2))
+  leg_name <- gsub("_", " ",leg_name)
+  for(i in 1:length(leg_name)){
+    leg_name[i] <- paste(strwrap(leg_name[i], width = 15),collapse = "\n")
+  }
+  lgd = Legend(at = leg_name, title = "Group", 
+               type = "lines", legend_gp = gpar(col = 1:8))
+  return(lgd)
+}
+
+gene_type <- function(my.symbols,org,Species){
+  if(Species != "not selected"){
+      ENSEMBL<-try(AnnotationDbi::select(org,keys = my.symbols,
+                                         keytype = "ENSEMBL",
+                                         columns = c("ENSEMBL", "ENTREZID")))
+      SYMBOL <-try(AnnotationDbi::select(org,keys = my.symbols,
+                                         keytype = "SYMBOL",
+                                         columns = c("SYMBOL", "ENTREZID")))
+      if(class(ENSEMBL) == "try-error" && class(SYMBOL) != "try-error") {type <- "SYMBOL"
+      }else if(class(ENSEMBL) != "try-error" && class(SYMBOL) == "try-error") {type <- "ENSEMBL"
+      }else if(class(ENSEMBL) == "try-error" && class(SYMBOL) == "try-error") {validate("Cannot identify gene IDs. Please check the 'Species' and use the 'Official gene symbol' or 'ENSEMBL ID' for gene names.")
+      }else{
+        if(dim(ENSEMBL)[1] > dim(SYMBOL)[1]) type <- "ENSEMBL" else type <- "SYMBOL"
+      }
+  }else type <- "not selected"
+  return(type)
 }
