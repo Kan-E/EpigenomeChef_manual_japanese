@@ -27,23 +27,23 @@ Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](ht
 注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
 HOMER human (hg19)対応 (required storage size: 18Gb)
 ```
-docker pull omicschef/epigenomechef:hg19v1.0.3-beta
+docker pull omicschef/epigenomechef:hg19v1.0.4-beta
 ```
 
 HOMER mouse (mm10)対応 (required storage size: 17Gb)
 ```
-docker pull omicschef/epigenomechef:mm10v1.0.3-beta
+docker pull omicschef/epigenomechef:mm10v1.0.4-beta
 ```
 
 
 **2. コンテナの作成**（実行コマンドの入力）<br>
 HOMER human (hg19)対応 
 ```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.3-beta
+docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.4-beta
 ```
 HOMER mouse (mm10)対応 
 ```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.3-beta
+docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.4-beta
 ```
 
 
@@ -96,8 +96,8 @@ NormalizeされたBigWig file (例: Reads per million (RPM))を使用してく�
 #### Peak call fileおよびBed fileのファイル名
 
 - **Pair-wise DAR、Clustering**<br>
-ファイル名にルールはありません。<br>
-どんな名前でも解析に影響はありません。<br>
+サンプル名のn数（replicate number）は、アンダーバー「 _ 」を用いて表記してください。<br>
+アンダーバー「 _ 」は、n数の表記以外では使用できません。<br>
 
 - **Venn diagram、Enrichment viewer、Bedtools**<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
@@ -152,6 +152,12 @@ BigWig fileは必ずnormalizedされたデータを使用してください(例�
 Sequence情報（single-end or paired-end）が必要となります。<br>
 二群間の統計解析はDESeq2を実行します。<br>
 各サンプルのリード数が揃っている場合は、BigWig fileを用いた解析より精度の高い結果が得られます。しかし、各サンプルのリード数が大きく異なる場合は、解析に大きな誤差が生じることがあります。<br>
+- **Count file + BigWig fileを選ぶ場合**<br>
+過去にPair-wise DARによる解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
+このモードを用いることで、BigWigファイルからカウントデータを抽出するステップを省略することができます。<br>
+**Type**:カウントファイルを作成した条件によって変更してください。BigWigファイルをインプットとした場合は**Normalized count**、Bamファイルをインプットとした場合は**Raw count**を選択してください。
+**Genomic region**や**Filter**は過去の解析の条件と合わせてください。
+peak patternやトラックプロットを書きたい場合は、BigWigファイルもアップロードする必要があります。
 
 #### Genomic region
 
@@ -159,6 +165,10 @@ Sequence情報（single-end or paired-end）が必要となります。<br>
 Peak call fileのアップロードが必要となります。<br>
 アップロードしたBigWigファイルに対応する全てのpeak call fileをアップロードしてください。<br>
 再現性のあるピーク領域に絞りこんで解析するために、２ファイル以上で共通してピークコールされた領域のみを参照・カウント化します。<br>
+- **Filter**<br>
+Reproducible peaks: 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n = 2でピークコールされる領域）。<br>
+（例1：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 → reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
+ALL peaks: ピークコールされた全ての領域をカウント化します。
 
 - **Promoterを選ぶ場合**<br>
 Peak call fileのアップロードは不要となります。<br>
@@ -189,6 +199,9 @@ Fold change, FDRの閾値が設定できます。
 アップロードしたファイル名を表示します。<br>
 カウントデータ作成後、カウントデータを表示します。
 <br><br>
+- **Sample order**<br>
+BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。
 ![](manual_figure/pair-wise input.png){#id .class width=90%}<br><br>
 
 ---
@@ -208,6 +221,9 @@ DAR解析の結果をvolcano plotとheatmapで表示します。<br>
 トラックプロットのピークの高さは、**peak range**で変更可能です。<br>
 トラックプロットに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。
 ![](manual_figure/pair-wise overview.png){#id .class width=90%}<br><br>
+volcanoプロット中の興味あるゲノム領域を囲うことで、そのゲノム領域の情報だけを抜き出したテーブルデータを表示することもできます。
+![](manual_figure/pair-wise overview2.png){#id .class width=90%}<br><br>
+
 
 #### Up_peaks及びDown_peaksパネル
 表データとして、DAR (bed file)が出力されます。<br>
@@ -349,6 +365,7 @@ TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力し�
 
 UpおよびDownしたPeakに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
 STARTボタンを押すと、解析を実行します。<br><br>
+![](manual_figure/pair-wise comb.png){#id .class width=90%}<br><br>
 
 ---
 
@@ -374,6 +391,9 @@ Venn diagram解析において必ず必要となるファイルです。<br>
 - **BigWig files**<br>
 Trackplotやpeak pattern (peak heatmapやline plot)を出力する場合は必要となります。<br>
 その他の機能においてはアップロードは不要です。
+- **Sample order**<br>
+BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。
 
 ---
 
@@ -394,6 +414,14 @@ Trackplotやpeak pattern (peak heatmapやline plot)を出力する場合は必�
 また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。
 <br><br>
 ![venn input](manual_figure/venn venn.png){#id .class width=90%}<br><br>
+#### Lineplot of intersections (comparison between intersections)
+アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
+一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br>
+
+#### Lineplot of intersections (comparison between bigwig)
+アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br>
+
+![venn input](manual_figure/venn lineplot.png){#id .class width=90%}<br><br>
 
 ---
 
@@ -526,7 +554,10 @@ DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み�
 RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
+着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
+**intersect_associated**は選択したintersectに含まれるゲノム領域が近傍に局在する遺伝子です。<br>
+
+
 ![](manual_figure/venn barplot.png){#id .class width=90%}<br><br>
 
 #### Result tableパネル
@@ -546,6 +577,7 @@ venn diagramやmotif解析用にbed形式でダウンロードすることも可
 ### Combined Heatmap
 
 選択したIntersectに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
+必ず**Select intersection**からヒートマップを描きたいゲノム領域を選択してください。
 セッティングパネルのBigWigファイルのアップロードは必須です。<br>
 STARTボタンを押すと、解析を実行します。
 
@@ -578,6 +610,11 @@ Bed fileのアップロードが必要となります。<br>
 目的がk-means clusteringを用いた詳細なゲノム領域の分析の場合は、Pair-wise DARやVenn diagramなどにより得たbed fileをアップロードしてください。
 bedファイルに含まれるゲノム領域のみをカウント化します。
 （k-means clusteringを実行できるゲノム領域の数は最大10,000までのため、解析対象となるゲノム領域をある程度絞り込んだbed fileが必要となります。）
+- **Filter**<br>
+Reproducible peaks: 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n = 2でピークコールされる領域）。<br>
+（例1：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 → reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
+ただし、n = 1のサンプルに関しては全てのピークコール領域を抽出します。
+ALL peaks: ピークコールされた全ての領域をカウント化します。
 
 - **Promoterを選ぶ場合**<br>
 bed fileのアップロードは不要となります。<br>
@@ -608,7 +645,10 @@ Fold change, FDRの閾値が設定できます。
 
 アップロードしたファイル名を表示します。<br>
 カウントデータ作成後、カウントデータを表示します。
-<br><br>
+<br>
+- **Sample order**<br>
+BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。<br><br>
 ![](manual_figure/clustering input.png){#id .class width=90%}<br><br>
 
 ---
@@ -625,8 +665,18 @@ Principal Component Analysis (PCA)、Multi-Dimensional Scaling (MDS), ward.D2に
 
 k-means clusteringを実行します。
 解析対象となるゲノム領域の数は、memoryの都合上、最大10,000領域(defaultは2000 loci。**Most variable loci**で変更可能)までです。<br>
-bed fileに含まれるゲノム領域の数が**Most variable loci**で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br>
-clusterの数は、**k-means number**から設定できます。<br><br>
+
+- **Select a pair for fold change cut-off**<br>
+Fold changeでcut-offしたい２群を選択できます。<br>
+cut-off後のゲノム領域の数が赤字で表示されるので、その数字を参考に**Most variable loci**を設定してください。<br>
+- **k-means number**<br>
+クラスターの数を設定します。
+- **Most variable loci**<br>
+cut-off後のゲノム領域の数が**Most variable loci**で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br>
+- **Order of clusters on heatmap**<br>
+ヒートマップ上のクラスターの順番を変更することができます。<br>
+※ デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。
+
 ![](manual_figure/clustering kmeans.png){#id .class width=90%}<br><br>
 
 **cluster_list**から興味あるClusterを選択することで、さらに詳細な解析ができます。<br>
@@ -682,7 +732,8 @@ DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み�
 RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
+着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
+**cluster_associated**は選択したclusterに含まれるゲノム領域が近傍に局在する遺伝子です。<br><br>
 ![](manual_figure/clustering barplot.png){#id .class width=90%}<br><br>
 
 #### Result tableパネル

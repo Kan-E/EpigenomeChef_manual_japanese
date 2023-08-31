@@ -237,7 +237,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">EpigenomeChef manual</h1>
-<h4 class="date">23/08/02 17:14</h4>
+<h4 class="date">23/08/31 23:17</h4>
 
 </div>
 
@@ -265,14 +265,14 @@ EpigenomeChefのインストール</strong>（一度実行すれば以後必要�
 imageを分割しています。解析したいデータセットの種に対応するdocker
 imageをインストールしてください。<br> HOMER human (hg19)対応 (required
 storage size: 18Gb)</p>
-<pre><code>docker pull omicschef/epigenomechef:hg19v1.0.3-beta</code></pre>
+<pre><code>docker pull omicschef/epigenomechef:hg19v1.0.4-beta</code></pre>
 <p>HOMER mouse (mm10)対応 (required storage size: 17Gb)</p>
-<pre><code>docker pull omicschef/epigenomechef:mm10v1.0.3-beta</code></pre>
+<pre><code>docker pull omicschef/epigenomechef:mm10v1.0.4-beta</code></pre>
 <p><strong>2. コンテナの作成</strong>（実行コマンドの入力）<br> HOMER
 human (hg19)対応</p>
-<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.3-beta</code></pre>
+<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.4-beta</code></pre>
 <p>HOMER mouse (mm10)対応</p>
-<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.3-beta</code></pre>
+<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.4-beta</code></pre>
 <p><strong>ブラウザで<a
 href="http://localhost:3838">http://localhost:3838</a>を立ち上げる</strong>。<br>
 解析終了後はコンテナを削除してください。<br></p>
@@ -330,8 +330,9 @@ class="section level4">
 <h4>Peak call fileおよびBed fileのファイル名</h4>
 <ul>
 <li><p><strong>Pair-wise DAR、Clustering</strong><br>
-ファイル名にルールはありません。<br>
-どんな名前でも解析に影響はありません。<br></p></li>
+サンプル名のn数（replicate number）は、アンダーバー「 _
+」を用いて表記してください。<br> アンダーバー「 _
+」は、n数の表記以外では使用できません。<br></p></li>
 <li><p><strong>Venn diagram、Enrichment viewer、Bedtools</strong><br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br></p></li>
@@ -393,6 +394,16 @@ paired-end）が必要となります。<br>
 二群間の統計解析はDESeq2を実行します。<br>
 各サンプルのリード数が揃っている場合は、BigWig
 fileを用いた解析より精度の高い結果が得られます。しかし、各サンプルのリード数が大きく異なる場合は、解析に大きな誤差が生じることがあります。<br></li>
+<li><strong>Count file + BigWig fileを選ぶ場合</strong><br>
+過去にPair-wise
+DARによる解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
+このモードを用いることで、BigWigファイルからカウントデータを抽出するステップを省略することができます。<br>
+<strong>Type</strong>:カウントファイルを作成した条件によって変更してください。BigWigファイルをインプットとした場合は<strong>Normalized
+count</strong>、Bamファイルをインプットとした場合は<strong>Raw
+count</strong>を選択してください。 <strong>Genomic
+region</strong>や<strong>Filter</strong>は過去の解析の条件と合わせてください。
+peak
+patternやトラックプロットを書きたい場合は、BigWigファイルもアップロードする必要があります。</li>
 </ul>
 </div>
 <div id="genomic-region" class="section level4">
@@ -403,6 +414,12 @@ fileのアップロードが必要となります。<br>
 アップロードしたBigWigファイルに対応する全てのpeak call
 fileをアップロードしてください。<br>
 再現性のあるピーク領域に絞りこんで解析するために、２ファイル以上で共通してピークコールされた領域のみを参照・カウント化します。<br></p></li>
+<li><p><strong>Filter</strong><br> Reproducible peaks:
+各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n =
+2でピークコールされる領域）。<br> （例1：A_1 有、A_2 有、B_1 無、B_2 無
+→ reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 →
+reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
+ALL peaks: ピークコールされた全ての領域をカウント化します。</p></li>
 <li><p><strong>Promoterを選ぶ場合</strong><br> Peak call
 fileのアップロードは不要となります。<br>
 Promoter領域の範囲は自由に変更可能です（default: upstream = 500 bp,
@@ -434,8 +451,11 @@ fileの共通ルール・注意点</strong>に記載されたルールをお守�
 <div id="input-data" class="section level3">
 <h3>Input Data</h3>
 <p>アップロードしたファイル名を表示します。<br>
-カウントデータ作成後、カウントデータを表示します。 <br><br> <img
-src="manual_figure/pair-wise%20input.png" id="id" class="class"
+カウントデータ作成後、カウントデータを表示します。 <br><br> -
+<strong>Sample order</strong><br>
+BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&amp;ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。
+<img src="manual_figure/pair-wise%20input.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 <hr />
 </div>
@@ -462,6 +482,9 @@ range</strong>で変更可能です。<br>
 トラックプロットに追加のデータを表示したい場合には、<strong>select
 additional bigwig files</strong>からデータをアップロードしてください。
 <img src="manual_figure/pair-wise%20overview.png" id="id" class="class"
+style="width:90.0%" /><br><br>
+volcanoプロット中の興味あるゲノム領域を囲うことで、そのゲノム領域の情報だけを抜き出したテーブルデータを表示することもできます。
+<img src="manual_figure/pair-wise%20overview2.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="up_peaks及びdown_peaksパネル" class="section level4">
@@ -650,7 +673,9 @@ class="class" style="width:90.0%" /><br><br></p>
 <div id="combined-heatmap" class="section level3">
 <h3>Combined Heatmap</h3>
 <p>UpおよびDownしたPeakに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
-STARTボタンを押すと、解析を実行します。<br><br></p>
+STARTボタンを押すと、解析を実行します。<br><br> <img
+src="manual_figure/pair-wise%20comb.png" id="id" class="class"
+style="width:90.0%" /><br><br></p>
 <hr />
 </div>
 </div>
@@ -677,6 +702,9 @@ diagram解析において必ず必要となるファイルです。<br>
 <li><strong>BigWig files</strong><br> Trackplotやpeak pattern (peak
 heatmapやline plot)を出力する場合は必要となります。<br>
 その他の機能においてはアップロードは不要です。</li>
+<li><strong>Sample order</strong><br>
+BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&amp;ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。</li>
 </ul>
 <hr />
 </div>
@@ -699,8 +727,18 @@ heatmapやline plot)を出力する場合は必要となります。<br>
 結果として、Venn diagramを出力します。<br>
 また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。
 <br><br> <img src="manual_figure/venn%20venn.png" id="id" class="class"
+style="width:90.0%" alt="venn input" /><br><br> #### Lineplot of
+intersections (comparison between intersections)
+アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
+一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br></p>
+<div id="lineplot-of-intersections-comparison-between-bigwig"
+class="section level4">
+<h4>Lineplot of intersections (comparison between bigwig)</h4>
+<p>アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br></p>
+<p><img src="manual_figure/venn%20lineplot.png" id="id" class="class"
 style="width:90.0%" alt="venn input" /><br><br></p>
 <hr />
+</div>
 </div>
 <div id="peak-pattern-1" class="section level3">
 <h3>Peak pattern</h3>
@@ -871,8 +909,9 @@ style="width:90.0%" /><br><br></p>
 <p>RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
-<img src="manual_figure/venn%20barplot.png" id="id" class="class"
+着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
+<strong>intersect_associated</strong>は選択したintersectに含まれるゲノム領域が近傍に局在する遺伝子です。<br></p>
+<p><img src="manual_figure/venn%20barplot.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="result-tableパネル-1" class="section level4">
@@ -897,6 +936,8 @@ style="width:90.0%" /><br><br> —</p>
 <div id="combined-heatmap-1" class="section level3">
 <h3>Combined Heatmap</h3>
 <p>選択したIntersectに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
+必ず<strong>Select
+intersection</strong>からヒートマップを描きたいゲノム領域を選択してください。
 セッティングパネルのBigWigファイルのアップロードは必須です。<br>
 STARTボタンを押すと、解析を実行します。</p>
 <hr />
@@ -939,6 +980,13 @@ diagramなどにより得たbed fileをアップロードしてください。
 bedファイルに含まれるゲノム領域のみをカウント化します。 （k-means
 clusteringを実行できるゲノム領域の数は最大10,000までのため、解析対象となるゲノム領域をある程度絞り込んだbed
 fileが必要となります。）</p></li>
+<li><p><strong>Filter</strong><br> Reproducible peaks:
+各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n =
+2でピークコールされる領域）。<br> （例1：A_1 有、A_2 有、B_1 無、B_2 無
+→ reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 →
+reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
+ただし、n = 1のサンプルに関しては全てのピークコール領域を抽出します。
+ALL peaks: ピークコールされた全ての領域をカウント化します。</p></li>
 <li><p><strong>Promoterを選ぶ場合</strong><br> bed
 fileのアップロードは不要となります。<br>
 Promoter領域の範囲は自由に変更可能です（default: upstream = 500 bp,
@@ -972,8 +1020,10 @@ fileの共通ルール・注意点</strong>に記載されたルールをお守�
 <div id="input-data-1" class="section level3">
 <h3>Input Data</h3>
 <p>アップロードしたファイル名を表示します。<br>
-カウントデータ作成後、カウントデータを表示します。 <br><br> <img
-src="manual_figure/clustering%20input.png" id="id" class="class"
+カウントデータ作成後、カウントデータを表示します。 <br> - <strong>Sample
+order</strong><br> BigWigファイルの順番を並び替えることができます。<br>
+※ドラッグ&amp;ドロップはできません。テキストを消すようにdeleteボタンで削除し、解析したい順番になるように再入力してください。<br><br>
+<img src="manual_figure/clustering%20input.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 <hr />
 </div>
@@ -991,12 +1041,23 @@ style="width:90.0%" /><br><br></p>
 <h3>k-means clustering</h3>
 <p>k-means clusteringを実行します。
 解析対象となるゲノム領域の数は、memoryの都合上、最大10,000領域(defaultは2000
-loci。<strong>Most variable loci</strong>で変更可能)までです。<br> bed
-fileに含まれるゲノム領域の数が<strong>Most variable
-loci</strong>で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br>
-clusterの数は、<strong>k-means number</strong>から設定できます。<br><br>
-<img src="manual_figure/clustering%20kmeans.png" id="id" class="class"
-style="width:90.0%" /><br><br></p>
+loci。<strong>Most variable loci</strong>で変更可能)までです。<br></p>
+<ul>
+<li><strong>Select a pair for fold change cut-off</strong><br> Fold
+changeでcut-offしたい２群を選択できます。<br>
+cut-off後のゲノム領域の数が赤字で表示されるので、その数字を参考に<strong>Most
+variable loci</strong>を設定してください。<br></li>
+<li><strong>k-means number</strong><br>
+クラスターの数を設定します。</li>
+<li><strong>Most variable loci</strong><br>
+cut-off後のゲノム領域の数が<strong>Most variable
+loci</strong>で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br></li>
+<li><strong>Order of clusters on heatmap</strong><br>
+ヒートマップ上のクラスターの順番を変更することができます。<br> ※
+デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。</li>
+</ul>
+<p><img src="manual_figure/clustering%20kmeans.png" id="id"
+class="class" style="width:90.0%" /><br><br></p>
 <p><strong>cluster_list</strong>から興味あるClusterを選択することで、さらに詳細な解析ができます。<br>
 なお、<strong>cluster_list</strong>で複数のClusterを選択した場合は、選択した全てのClusterを同一のClusterとみなして解析します（それぞれのクラスターを個別に解析するわけではありません）。<br></p>
 <div id="peak-pattern-2" class="section level4">
@@ -1072,7 +1133,8 @@ style="width:90.0%" /><br><br></p>
 <p>RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
+着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
+<strong>cluster_associated</strong>は選択したclusterに含まれるゲノム領域が近傍に局在する遺伝子です。<br><br>
 <img src="manual_figure/clustering%20barplot.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
@@ -1552,31 +1614,27 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 <div id="session-info" class="section level1">
 <h1>Session info</h1>
 <pre class="r"><code> sessionInfo()</code></pre>
-<pre><code>## R version 4.3.0 (2023-04-21 ucrt)
-## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 11 x64 (build 22621)
+<pre><code>## R version 4.2.3 (2023-03-15)
+## Platform: x86_64-apple-darwin17.0 (64-bit)
+## Running under: macOS Big Sur ... 10.16
 ## 
 ## Matrix products: default
-## 
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRblas.0.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.2/Resources/lib/libRlapack.dylib
 ## 
 ## locale:
-## [1] LC_COLLATE=Japanese_Japan.utf8  LC_CTYPE=Japanese_Japan.utf8   
-## [3] LC_MONETARY=Japanese_Japan.utf8 LC_NUMERIC=C                   
-## [5] LC_TIME=Japanese_Japan.utf8    
-## 
-## time zone: Asia/Tokyo
-## tzcode source: internal
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 ## 
 ## attached base packages:
 ##  [1] grid      tools     stats4    stats     graphics  grDevices utils    
 ##  [8] datasets  methods   base     
 ## 
 ## other attached packages:
-##   [1] Gviz_1.44.0                                  
+##   [1] Gviz_1.40.1                                  
 ##   [2] webshot_0.5.4                                
 ##   [3] magick_2.7.4                                 
 ##   [4] pdftools_3.3.3                               
-##   [5] EnrichedHeatmap_1.30.0                       
+##   [5] EnrichedHeatmap_1.26.0                       
 ##   [6] ggrastr_1.0.1                                
 ##   [7] ggsci_3.0.0                                  
 ##   [8] reshape2_1.4.4                               
@@ -1587,28 +1645,28 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [13] plotmics_7.0.1                               
 ##  [14] marge_0.0.4.9999                             
 ##  [15] ggseqlogo_0.1                                
-##  [16] limma_3.56.0                                 
-##  [17] FindIT2_1.6.0                                
-##  [18] rGREAT_2.2.0                                 
-##  [19] ChIPpeakAnno_3.34.0                          
-##  [20] ChIPseeker_1.36.0                            
+##  [16] limma_3.52.4                                 
+##  [17] FindIT2_1.2.3                                
+##  [18] rGREAT_1.28.0                                
+##  [19] ChIPpeakAnno_3.30.1                          
+##  [20] ChIPseeker_1.32.1                            
 ##  [21] soGGi_1.10.4                                 
-##  [22] dorothea_1.12.0                              
+##  [22] dorothea_1.8.0                               
 ##  [23] clusterProfiler.dplyr_0.0.2                  
 ##  [24] BiocManager_1.30.20                          
 ##  [25] shinyjs_2.1.0                                
 ##  [26] plotly_4.10.1                                
 ##  [27] shinyBS_0.61.1                               
-##  [28] ComplexHeatmap_2.16.0                        
-##  [29] genefilter_1.82.0                            
+##  [28] ComplexHeatmap_2.12.1                        
+##  [29] genefilter_1.78.0                            
 ##  [30] msigdbr_7.5.1                                
-##  [31] DOSE_3.26.0                                  
-##  [32] enrichplot_1.20.0                            
-##  [33] clusterProfiler_4.8.0                        
+##  [31] DOSE_3.22.1                                  
+##  [32] enrichplot_1.16.2                            
+##  [33] clusterProfiler_4.4.4                        
 ##  [34] ggnewscale_0.4.8                             
-##  [35] DESeq2_1.40.0                                
-##  [36] SummarizedExperiment_1.30.0                  
-##  [37] MatrixGenerics_1.12.0                        
+##  [35] DESeq2_1.36.0                                
+##  [36] SummarizedExperiment_1.26.1                  
+##  [37] MatrixGenerics_1.8.1                         
 ##  [38] matrixStats_0.63.0                           
 ##  [39] cowplot_1.1.1                                
 ##  [40] gridExtra_2.3                                
@@ -1628,26 +1686,26 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [54] tidyverse_2.0.0                              
 ##  [55] multcomp_1.4-23                              
 ##  [56] TH.data_1.1-2                                
-##  [57] MASS_7.3-59                                  
-##  [58] survival_3.5-5                               
+##  [57] MASS_7.3-58.2                                
+##  [58] survival_3.5-3                               
 ##  [59] mvtnorm_1.1-3                                
 ##  [60] rstatix_0.7.2                                
 ##  [61] gdata_2.19.0                                 
 ##  [62] DT_0.27                                      
 ##  [63] shiny_1.7.4                                  
-##  [64] biomaRt_2.56.0                               
-##  [65] org.Pt.eg.db_3.17.0                          
-##  [66] org.Mmu.eg.db_3.17.0                         
-##  [67] org.Gg.eg.db_3.17.0                          
-##  [68] org.Dr.eg.db_3.17.0                          
-##  [69] org.Cf.eg.db_3.17.0                          
-##  [70] org.Bt.eg.db_3.17.0                          
-##  [71] org.Xl.eg.db_3.17.0                          
-##  [72] org.Ce.eg.db_3.17.0                          
-##  [73] org.Dm.eg.db_3.17.0                          
-##  [74] org.Rn.eg.db_3.17.0                          
-##  [75] org.Mm.eg.db_3.17.0                          
-##  [76] org.Hs.eg.db_3.17.0                          
+##  [64] biomaRt_2.52.0                               
+##  [65] org.Pt.eg.db_3.15.0                          
+##  [66] org.Mmu.eg.db_3.15.0                         
+##  [67] org.Gg.eg.db_3.15.0                          
+##  [68] org.Dr.eg.db_3.15.0                          
+##  [69] org.Cf.eg.db_3.15.0                          
+##  [70] org.Bt.eg.db_3.15.0                          
+##  [71] org.Xl.eg.db_3.15.0                          
+##  [72] org.Ce.eg.db_3.15.0                          
+##  [73] org.Dm.eg.db_3.15.0                          
+##  [74] org.Rn.eg.db_3.15.0                          
+##  [75] org.Mm.eg.db_3.15.0                          
+##  [76] org.Hs.eg.db_3.15.0                          
 ##  [77] TxDb.Ptroglodytes.UCSC.panTro4.refGene_3.12.0
 ##  [78] TxDb.Mmulatta.UCSC.rheMac8.refGene_3.12.0    
 ##  [79] TxDb.Ggallus.UCSC.galGal4.refGene_3.12.0     
@@ -1658,83 +1716,83 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [84] TxDb.Rnorvegicus.UCSC.rn6.refGene_3.4.6      
 ##  [85] TxDb.Dmelanogaster.UCSC.dm6.ensGene_3.12.0   
 ##  [86] TxDb.Mmusculus.UCSC.mm10.knownGene_3.10.0    
-##  [87] TxDb.Hsapiens.UCSC.hg38.knownGene_3.17.0     
+##  [87] TxDb.Hsapiens.UCSC.hg38.knownGene_3.15.0     
 ##  [88] TxDb.Hsapiens.UCSC.hg19.knownGene_3.2.2      
-##  [89] GenomicFeatures_1.52.0                       
-##  [90] AnnotationDbi_1.62.0                         
-##  [91] Biobase_2.60.0                               
-##  [92] Rsamtools_2.16.0                             
-##  [93] Biostrings_2.68.0                            
-##  [94] XVector_0.40.0                               
-##  [95] Rsubread_2.14.0                              
-##  [96] rtracklayer_1.60.0                           
-##  [97] GenomicRanges_1.52.0                         
-##  [98] GenomeInfoDb_1.36.0                          
-##  [99] IRanges_2.34.0                               
-## [100] S4Vectors_0.38.0                             
-## [101] BiocGenerics_0.46.0                          
+##  [89] GenomicFeatures_1.48.4                       
+##  [90] AnnotationDbi_1.58.0                         
+##  [91] Biobase_2.56.0                               
+##  [92] Rsamtools_2.12.0                             
+##  [93] Biostrings_2.64.1                            
+##  [94] XVector_0.36.0                               
+##  [95] Rsubread_2.10.5                              
+##  [96] rtracklayer_1.56.1                           
+##  [97] GenomicRanges_1.48.0                         
+##  [98] GenomeInfoDb_1.32.4                          
+##  [99] IRanges_2.30.1                               
+## [100] S4Vectors_0.34.0                             
+## [101] BiocGenerics_0.42.0                          
 ## 
 ## loaded via a namespace (and not attached):
-##   [1] dichromat_2.0-0.1        progress_1.2.2           nnet_7.3-18             
-##   [4] vctrs_0.6.2              digest_0.6.31            png_0.1-8               
-##   [7] shape_1.4.6              deldir_1.0-6             bcellViper_1.36.0       
-##  [10] httpuv_1.6.9             foreach_1.5.2            qvalue_2.32.0           
-##  [13] withr_2.5.0              xfun_0.39                ggfun_0.0.9             
-##  [16] ellipsis_0.3.2           memoise_2.0.1            ggbeeswarm_0.7.1        
-##  [19] gson_0.1.0               tidytree_0.4.2           zoo_1.8-12              
-##  [22] GlobalOptions_0.1.2      gtools_3.9.4             Formula_1.2-5           
-##  [25] prettyunits_1.1.1        KEGGREST_1.40.0          promises_1.2.0.1        
-##  [28] httr_1.4.5               downloader_0.4           restfulr_0.0.15         
-##  [31] rstudioapi_0.14          generics_0.1.3           base64enc_0.1-3         
-##  [34] babelgene_22.9           curl_5.0.0               zlibbioc_1.46.0         
-##  [37] ggraph_2.1.0             polyclip_1.10-4          GenomeInfoDbData_1.2.10 
-##  [40] RBGL_1.76.0              xtable_1.8-4             doParallel_1.0.17       
-##  [43] evaluate_0.20            BiocFileCache_2.8.0      preprocessCore_1.62.0   
-##  [46] glmnet_4.1-7             hms_1.1.3                filelock_1.0.2          
-##  [49] VennDiagram_1.7.3        magrittr_2.0.3           later_1.3.0             
-##  [52] viridis_0.6.2            ggtree_3.8.0             lattice_0.21-8          
-##  [55] XML_3.99-0.14            shadowtext_0.1.2         Hmisc_5.0-1             
-##  [58] pillar_1.9.0             nlme_3.1-162             iterators_1.0.14        
-##  [61] caTools_1.18.2           compiler_4.3.0           stringi_1.7.12          
-##  [64] GenomicAlignments_1.36.0 plyr_1.8.8               crayon_1.5.2            
-##  [67] abind_1.4-5              BiocIO_1.10.0            gridGraphics_0.5-1      
-##  [70] locfit_1.5-9.7           graphlayouts_0.8.4       bit_4.0.5               
-##  [73] sandwich_3.0-2           fastmatch_1.1-3          codetools_0.2-19        
-##  [76] bslib_0.4.2              biovizBase_1.48.0        GetoptLong_1.0.5        
-##  [79] multtest_2.56.0          mime_0.12                splines_4.3.0           
-##  [82] circlize_0.4.15          Rcpp_1.0.10              dbplyr_2.3.2            
-##  [85] HDO.db_0.99.1            interp_1.1-4             knitr_1.42              
-##  [88] blob_1.2.4               utf8_1.2.3               clue_0.3-64             
-##  [91] AnnotationFilter_1.24.0  chipseq_1.50.0           checkmate_2.2.0         
-##  [94] admisc_0.31              ggsignif_0.6.4           Matrix_1.5-4            
-##  [97] tzdb_0.3.0               tweenr_2.0.2             pkgconfig_2.0.3         
-## [100] cachem_1.0.7             RSQLite_2.3.1            viridisLite_0.4.1       
-## [103] DBI_1.1.3                fastmap_1.1.1            rmarkdown_2.21          
-## [106] scales_1.2.1             broom_1.0.4              sass_0.4.5              
-## [109] patchwork_1.1.2          VariantAnnotation_1.46.0 graph_1.78.0            
-## [112] carData_3.0-5            rpart_4.1.19             farver_2.1.1            
-## [115] tidygraph_1.2.3          scatterpie_0.1.9         yaml_2.3.7              
-## [118] foreign_0.8-84           latticeExtra_0.6-30      cli_3.6.1               
-## [121] lifecycle_1.0.3          askpass_1.1              lambda.r_1.2.4          
-## [124] backports_1.4.1          BiocParallel_1.34.0      annotate_1.78.0         
-## [127] timechange_0.2.0         gtable_0.3.3             rjson_0.2.21            
-## [130] parallel_4.3.0           ape_5.7-1                jsonlite_1.8.4          
-## [133] bitops_1.0-7             bit64_4.0.5              yulab.utils_0.0.6       
-## [136] futile.options_1.0.1     jquerylib_0.1.4          GOSemSim_2.26.0         
-## [139] lazyeval_0.2.2           htmltools_0.5.5          GO.db_3.17.0            
-## [142] formatR_1.14             rappdirs_0.3.3           ensembldb_2.24.0        
-## [145] glue_1.6.2               qpdf_1.3.2               InteractionSet_1.28.0   
-## [148] RCurl_1.98-1.12          treeio_1.24.0            BSgenome_1.68.0         
-## [151] futile.logger_1.4.3      jpeg_0.1-10              boot_1.3-28.1           
-## [154] igraph_1.4.2             R6_2.5.1                 gplots_3.1.3            
-## [157] cluster_2.1.4            regioneR_1.32.0          aplot_0.1.10            
-## [160] ProtGenerics_1.32.0      vipor_0.4.5              DelayedArray_0.25.0     
-## [163] tidyselect_1.2.0         plotrix_3.8-2            htmlTable_2.4.1         
-## [166] ggforce_0.4.1            xml2_1.3.4               car_3.1-2               
-## [169] munsell_0.5.0            KernSmooth_2.23-20       data.table_1.14.8       
-## [172] htmlwidgets_1.6.2        fgsea_1.26.0             hwriter_1.3.2.1         
-## [175] rlang_1.1.0              ShortRead_1.58.0         fansi_1.0.4             
-## [178] beeswarm_0.4.0</code></pre>
+##   [1] Hmisc_5.0-1              glmnet_4.1-7             foreach_1.5.2           
+##   [4] crayon_1.5.2             nlme_3.1-162             backports_1.4.1         
+##   [7] GOSemSim_2.22.0          rlang_1.1.0              filelock_1.0.2          
+##  [10] BiocParallel_1.30.4      rjson_0.2.21             chipseq_1.46.0          
+##  [13] bcellViper_1.32.0        bit64_4.0.5              glue_1.6.2              
+##  [16] vipor_0.4.5              parallel_4.2.3           regioneR_1.28.0         
+##  [19] tidyselect_1.2.0         XML_3.99-0.14            zoo_1.8-12              
+##  [22] GenomicAlignments_1.32.1 xtable_1.8-4             magrittr_2.0.3          
+##  [25] evaluate_0.20            cli_3.6.1                zlibbioc_1.42.0         
+##  [28] RVenn_1.1.0              hwriter_1.3.2.1          rstudioapi_0.14         
+##  [31] rpart_4.1.19             bslib_0.4.2              fastmatch_1.1-3         
+##  [34] ensembldb_2.20.2         lambda.r_1.2.4           treeio_1.20.2           
+##  [37] xfun_0.39                askpass_1.1              clue_0.3-64             
+##  [40] multtest_2.52.0          cluster_2.1.4            caTools_1.18.2          
+##  [43] tidygraph_1.2.3          KEGGREST_1.36.3          biovizBase_1.44.0       
+##  [46] ape_5.7-1                png_0.1-8                withr_2.5.0             
+##  [49] bitops_1.0-7             ggforce_0.4.1            RBGL_1.72.0             
+##  [52] plyr_1.8.8               AnnotationFilter_1.20.0  pillar_1.9.0            
+##  [55] gplots_3.1.3             GlobalOptions_0.1.2      cachem_1.0.7            
+##  [58] GetoptLong_1.0.5         vctrs_0.6.2              ellipsis_0.3.2          
+##  [61] generics_0.1.3           qpdf_1.3.2               foreign_0.8-84          
+##  [64] beeswarm_0.4.0           munsell_0.5.0            tweenr_2.0.2            
+##  [67] fgsea_1.22.0             DelayedArray_0.22.0      fastmap_1.1.1           
+##  [70] compiler_4.2.3           abind_1.4-5              httpuv_1.6.9            
+##  [73] GenomeInfoDbData_1.2.8   InteractionSet_1.24.0    lattice_0.20-45         
+##  [76] deldir_1.0-6             utf8_1.2.3               later_1.3.0             
+##  [79] BiocFileCache_2.4.0      jsonlite_1.8.4           scales_1.2.1            
+##  [82] graph_1.74.0             tidytree_0.4.2           carData_3.0-5           
+##  [85] lazyeval_0.2.2           promises_1.2.0.1         car_3.1-2               
+##  [88] doParallel_1.0.17        latticeExtra_0.6-30      checkmate_2.1.0         
+##  [91] rmarkdown_2.21           sandwich_3.0-2           ggVennDiagram_1.2.2     
+##  [94] dichromat_2.0-0.1        downloader_0.4           BSgenome_1.64.0         
+##  [97] igraph_1.4.2             yaml_2.3.7               plotrix_3.8-2           
+## [100] htmltools_0.5.5          memoise_2.0.1            VariantAnnotation_1.42.1
+## [103] BiocIO_1.6.0             locfit_1.5-9.7           graphlayouts_0.8.4      
+## [106] viridisLite_0.4.1        digest_0.6.31            mime_0.12               
+## [109] rappdirs_0.3.3           futile.options_1.0.1     RSQLite_2.3.1           
+## [112] yulab.utils_0.0.6        VennDiagram_1.7.3        data.table_1.14.8       
+## [115] blob_1.2.4               futile.logger_1.4.3      preprocessCore_1.58.0   
+## [118] Formula_1.2-5            splines_4.2.3            ProtGenerics_1.28.0     
+## [121] RCurl_1.98-1.12          broom_1.0.4              hms_1.1.3               
+## [124] base64enc_0.1-3          ggbeeswarm_0.7.1         shape_1.4.6             
+## [127] aplot_0.1.10             nnet_7.3-18              sass_0.4.5              
+## [130] Rcpp_1.0.10              circlize_0.4.15          fansi_1.0.4             
+## [133] tzdb_0.3.0               R6_2.5.1                 lifecycle_1.0.3         
+## [136] formatR_1.14             ShortRead_1.54.0         curl_5.0.0              
+## [139] ggsignif_0.6.4           jquerylib_0.1.4          DO.db_2.9               
+## [142] Matrix_1.5-3             qvalue_2.28.0            iterators_1.0.14        
+## [145] htmlwidgets_1.6.2        polyclip_1.10-4          shadowtext_0.1.2        
+## [148] timechange_0.2.0         gridGraphics_0.5-1       htmlTable_2.4.1         
+## [151] patchwork_1.1.2          codetools_0.2-19         GO.db_3.15.0            
+## [154] gtools_3.9.4             prettyunits_1.1.1        dbplyr_2.3.2            
+## [157] gtable_0.3.3             DBI_1.1.3                ggfun_0.0.9             
+## [160] httr_1.4.5               KernSmooth_2.23-20       stringi_1.7.12          
+## [163] progress_1.2.2           farver_2.1.1             annotate_1.74.0         
+## [166] viridis_0.6.2            ggtree_3.4.4             xml2_1.3.3              
+## [169] admisc_0.31              boot_1.3-28.1            restfulr_0.0.15         
+## [172] interp_1.1-4             geneplotter_1.74.0       bit_4.0.5               
+## [175] scatterpie_0.1.9         jpeg_0.1-10              ggraph_2.1.0            
+## [178] pkgconfig_2.0.3          babelgene_22.9           knitr_1.43</code></pre>
 </div>
 
 
