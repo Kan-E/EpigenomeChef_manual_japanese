@@ -166,9 +166,14 @@ Peak call fileのアップロードが必要となります。<br>
 アップロードしたBigWigファイルに対応する全てのpeak call fileをアップロードしてください。<br>
 再現性のあるピーク領域に絞りこんで解析するために、２ファイル以上で共通してピークコールされた領域のみを参照・カウント化します。<br>
 - **Filter**<br>
-Reproducible peaks: 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n = 2でピークコールされる領域）。<br>
-（例1：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 → reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
-ALL peaks: ピークコールされた全ての領域をカウント化します。
+**Reproducible peaks**: 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n = 2でピークコールされる領域）。<br>
+例:<br>
+X：A_1 無、A_2 無、B_1 有、B_2 有 → reproducible<br>
+Y：A_1 有、A_2 無、B_1 有、B_2 無 → NOT reproducible<br>
+Z：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible<br>
+→ XとZのゲノム領域に関して、BigWigファイルからピークの高さの情報を抽出、カウント化<br><br>
+**ALL peaks**: ピークコールされた全ての領域をカウント化します。<br>
+![](manual_figure/pair_peakcallfilter.png){#id .class width=50%}<br><br>
 
 - **Promoterを選ぶ場合**<br>
 Peak call fileのアップロードは不要となります。<br>
@@ -612,9 +617,15 @@ bedファイルに含まれるゲノム領域のみをカウント化します�
 （k-means clusteringを実行できるゲノム領域の数は最大10,000までのため、解析対象となるゲノム領域をある程度絞り込んだbed fileが必要となります。）
 - **Filter**<br>
 Reproducible peaks: 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n = 2でピークコールされる領域）。<br>
-（例1：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 → reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
 ただし、n = 1のサンプルに関しては全てのピークコール領域を抽出します。
-ALL peaks: ピークコールされた全ての領域をカウント化します。
+例:<br>
+X：A_1 無、A_2 無、B_1 有、B_2 有、C_1 無 → reproducible<br>
+Y：A_1 有、A_2 無、B_1 有、B_2 無、C_1 無 → NOT reproducible<br>
+Z：A_1 有、A_2 有、B_1 無、B_2 無、C_1 有 → reproducible<br>
+C：A_1 無、A_2 無、B_1 無、B_2 無、C_1 有 → Cはn=1なのでreproducible扱い<br>
+→ X、Z、Cのゲノム領域に関して、BigWigファイルからピークの高さの情報を抽出、カウント化<br><br>
+**ALL peaks**: ピークコールされた全ての領域をカウント化します。<br>
+![](manual_figure/cluster_filter.png){#id .class width=50%}<br><br>
 
 - **Promoterを選ぶ場合**<br>
 bed fileのアップロードは不要となります。<br>

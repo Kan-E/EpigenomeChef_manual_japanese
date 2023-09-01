@@ -237,7 +237,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">EpigenomeChef manual</h1>
-<h4 class="date">23/08/31 23:17</h4>
+<h4 class="date">23/09/01 13:23</h4>
 
 </div>
 
@@ -414,12 +414,16 @@ fileのアップロードが必要となります。<br>
 アップロードしたBigWigファイルに対応する全てのpeak call
 fileをアップロードしてください。<br>
 再現性のあるピーク領域に絞りこんで解析するために、２ファイル以上で共通してピークコールされた領域のみを参照・カウント化します。<br></p></li>
-<li><p><strong>Filter</strong><br> Reproducible peaks:
+<li><p><strong>Filter</strong><br> <strong>Reproducible peaks</strong>:
 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n =
-2でピークコールされる領域）。<br> （例1：A_1 有、A_2 有、B_1 無、B_2 無
-→ reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 →
-reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
-ALL peaks: ピークコールされた全ての領域をカウント化します。</p></li>
+2でピークコールされる領域）。<br> 例:<br> X：A_1 無、A_2 無、B_1 有、B_2
+有 → reproducible<br> Y：A_1 有、A_2 無、B_1 有、B_2 無 → NOT
+reproducible<br> Z：A_1 有、A_2 有、B_1 無、B_2 無 → reproducible<br> →
+XとZのゲノム領域に関して、BigWigファイルからピークの高さの情報を抽出、カウント化<br><br>
+<strong>ALL peaks</strong>:
+ピークコールされた全ての領域をカウント化します。<br> <img
+src="manual_figure/pair_peakcallfilter.png" id="id" class="class"
+style="width:50.0%" /><br><br></p></li>
 <li><p><strong>Promoterを選ぶ場合</strong><br> Peak call
 fileのアップロードは不要となります。<br>
 Promoter領域の範囲は自由に変更可能です（default: upstream = 500 bp,
@@ -982,11 +986,17 @@ clusteringを実行できるゲノム領域の数は最大10,000までのため�
 fileが必要となります。）</p></li>
 <li><p><strong>Filter</strong><br> Reproducible peaks:
 各条件に関して再現性のあるピークコール領域のみを抽出します（最低 n =
-2でピークコールされる領域）。<br> （例1：A_1 有、A_2 有、B_1 無、B_2 無
-→ reproducible、例2：A_1 無、A_2 無、B_1 有、B_2 有 →
-reproducible、例2：A_1 有、A_2 無、B_1 無、B_2 有 → NOT reproducible）
-ただし、n = 1のサンプルに関しては全てのピークコール領域を抽出します。
-ALL peaks: ピークコールされた全ての領域をカウント化します。</p></li>
+2でピークコールされる領域）。<br> ただし、n =
+1のサンプルに関しては全てのピークコール領域を抽出します。 例:<br> X：A_1
+無、A_2 無、B_1 有、B_2 有、C_1 無 → reproducible<br> Y：A_1 有、A_2
+無、B_1 有、B_2 無、C_1 無 → NOT reproducible<br> Z：A_1 有、A_2 有、B_1
+無、B_2 無、C_1 有 → reproducible<br> C：A_1 無、A_2 無、B_1 無、B_2
+無、C_1 有 → Cはn=1なのでreproducible扱い<br> →
+X、Z、Cのゲノム領域に関して、BigWigファイルからピークの高さの情報を抽出、カウント化<br><br>
+<strong>ALL peaks</strong>:
+ピークコールされた全ての領域をカウント化します。<br> <img
+src="manual_figure/cluster_filter.png" id="id" class="class"
+style="width:50.0%" /><br><br></p></li>
 <li><p><strong>Promoterを選ぶ場合</strong><br> bed
 fileのアップロードは不要となります。<br>
 Promoter領域の範囲は自由に変更可能です（default: upstream = 500 bp,
