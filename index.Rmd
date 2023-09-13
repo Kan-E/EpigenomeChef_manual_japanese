@@ -27,23 +27,23 @@ Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](ht
 注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
 HOMER human (hg19)対応 (required storage size: 18Gb)
 ```
-docker pull omicschef/epigenomechef:hg19v1.0.4-beta
+docker pull omicschef/epigenomechef:hg19v1.0.5-beta
 ```
 
 HOMER mouse (mm10)対応 (required storage size: 17Gb)
 ```
-docker pull omicschef/epigenomechef:mm10v1.0.4-beta
+docker pull omicschef/epigenomechef:mm10v1.0.5-beta
 ```
 
 
 **2. コンテナの作成**（実行コマンドの入力）<br>
 HOMER human (hg19)対応 
 ```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.4-beta
+docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.5-beta
 ```
 HOMER mouse (mm10)対応 
 ```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.4-beta
+docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.5-beta
 ```
 
 
