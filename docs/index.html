@@ -237,7 +237,7 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">EpigenomeChef manual</h1>
-<h4 class="date">23/09/13 11:10</h4>
+<h4 class="date">23/12/18 11:33</h4>
 
 </div>
 
@@ -251,31 +251,58 @@ class="class" style="width:100.0%" /> <br><br></p>
 ChIP-seq, ATAC-seq,
 Bisulfite-seqのデータベースである<strong>ChIP-atlas</strong>からダウンロードしたデータをそのまま使用することができます(事前にファイル名を変更する必要があります。詳細はInput
 fileの共通ルール・注意点)。
-また、RNA-seqデータから得た遺伝子発現変動(DEG)解析結果を同時にアップロードすることで、トランスクリプトーム解析との統合解析も可能です。<br><br>
-EpigenomeChefは、Docker imageをインストールすることで使用可能です。<br>
-<strong>0.（Docker環境がない場合）Dockerのインストール</strong><br>
-インストール方法は以下のページが詳しいです。<br> Windows:<a
-href="https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html">https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html</a><br>
-Mac:<a
-href="https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/">https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/</a><br><br></p>
-<p><strong>1.
-EpigenomeChefのインストール</strong>（一度実行すれば以後必要ありません）
-<br>
-注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker
-imageを分割しています。解析したいデータセットの種に対応するdocker
-imageをインストールしてください。<br> HOMER human (hg19)対応 (required
-storage size: 18Gb)</p>
-<pre><code>docker pull omicschef/epigenomechef:hg19v1.0.5-beta</code></pre>
-<p>HOMER mouse (mm10)対応 (required storage size: 17Gb)</p>
-<pre><code>docker pull omicschef/epigenomechef:mm10v1.0.5-beta</code></pre>
-<p><strong>2. コンテナの作成</strong>（実行コマンドの入力）<br> HOMER
-human (hg19)対応</p>
-<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.5-beta</code></pre>
-<p>HOMER mouse (mm10)対応</p>
-<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.5-beta</code></pre>
+また、RNA-seqデータから得た遺伝子発現変動(DEG)解析結果を同時にアップロードすることで、トランスクリプトーム解析との統合解析も可能です。<br><br></p>
+<div id="ウェブバージョン-チュートリアル用" class="section level2">
+<h2>ウェブバージョン (チュートリアル用)</h2>
+<p><a
+href="https://imeg-ku.shinyapps.io/EpigenomeChef_web/">https://imeg-ku.shinyapps.io/EpigenomeChef_web/</a>.<br>
+EpigenomeChef_webは上記のURLにアクセスするだけ使用することができるウェブアプリケーションです。<br>
+計算は全てウェブサーバー(<a
+href="https://www.shinyapps.io/">Shinyapps.io</a>)上で実行されます。<br>
+このバージョンはウェブサーバーのメモリの都合上、以下の制限があるため、本格的に解析される方はDockerバージョンの使用を推奨します。<br>
+- 同時アクセス可能数 - HOMERを用いたモチーフ解析が使用不可 - Heatmap
+(1万を超えるピーク領域の解析はサーバーダウンする可能性があります)</p>
+<p>その一方で、以下のbedファイルを用いた解析に関してはウェブバージョンでも安定的に利用可能です。
+- ベン図解析 - GREATによるエンリッチメント解析 - アノテーション解析 -
+Regulatory potentialを用いたRNA-seqとの統合解析</p>
+</div>
+<div id="dockerバージョン" class="section level2">
+<h2>Dockerバージョン</h2>
+<div id="方法１" class="section level4">
+<h4>方法１</h4>
+<p>EpigenomeChefは、Docker
+imageをインストールすることで使用可能です。<br> ###
+0.（Docker環境がない場合）Dockerのインストール</p>
+</div>
+<div id="epigenomechefのインストール一度実行すれば以後必要ありません"
+class="section level3">
+<h3>1.
+EpigenomeChefのインストール（一度実行すれば以後必要ありません）</h3>
+<p>コマンドプロンプト(windows)またはターミナル(Mac,
+Linux)で以下のコマンドを入力します。</p>
+<pre><code>docker pull omicschef/epigenomechef:v1.1.2</code></pre>
+</div>
+<div id="コンテナの作製立ち上げ" class="section level3">
+<h3>2. コンテナの作製・立ち上げ</h3>
+<p>EpigenomeChefのコンテナを作製・立ち上げます。<br>
+コンテナを立ち上げる方法はコマンドを使う方法とコマンドを使わないDocker
+Desktopを操作する方法があります。<br></p>
+<div id="方法１コマンドの入力" class="section level4">
+<h4>方法１:コマンドの入力</h4>
+<pre><code>docker run --rm -p 3838:3838 omicschef/epigenomechef:v1.1.2
+
+## オプション: バインドマウント
+## BigWigファイルを含むフォルダをコンテナにバインドすることができます。アップロードしたいファイル容量が大きい場合、バインドマウントを使用することでアップロード時間をスキップすることができます。
+## docker run --rm -p 3838:3838  -v ${path/to/directory}:/srv/shiny-server/EpigenomeChef/Volume omicschef/epigenomechef:v1.1.0
+## 例:カレントディレクトリをバインドマウントしたい場合は以下のコマンドを実行します。
+docker run --rm -p 3838:3838  -v ${PWD}:/srv/shiny-server/EpigenomeChef/Volume omicschef/epigenomechef:v1.1.0</code></pre>
 <p><strong>ブラウザで<a
 href="http://localhost:3838">http://localhost:3838</a>を立ち上げる</strong>。<br>
 解析終了後はコンテナを削除してください。<br></p>
+<div id="方法２docker-desktopの操作" class="section level5">
+<h5>方法２:Docker Desktopの操作</h5>
+<p><img src="manual_figure/docker.png" id="id" class="class"
+style="width:100.0%" alt="panel" /> <br><br></p>
 <p>If you need help, please create an issue on <a
 href="https://github.com/Kan-E/EpigenomeChef/issues">Github</a> or <a
 href="mailto:kaneto@kumamoto-u.ac.jp" class="email">contact us</a>.
@@ -288,7 +315,7 @@ region解析)</p></li>
 (ゲノム領域の位置情報の重ね合わせの解析)</p></li>
 <li><p><strong>Clustering</strong> (クラスタリング解析、k-means
 clusteringを用いたゲノム領域の分類・解析)</p></li>
-<li><p><strong>Enrichment viewer</strong>
+<li><p><strong>Peaks of interest</strong>
 (ゲノム領域の機能解析・モチーフ解析)</p></li>
 <li><p><strong>More</strong>（その他の便利機能やReferenceなど）</p></li>
 </ul>
@@ -300,20 +327,31 @@ clusteringを用いたゲノム領域の分類・解析)</p></li>
 style="width:90.0%" alt="panel" /> <br></p>
 <hr />
 </div>
+</div>
+</div>
+</div>
+</div>
 <div id="input-fileの共通ルール注意点" class="section level1">
 <h1>Input fileの共通ルール・注意点</h1>
 <div id="拡張子" class="section level4">
 <h4>拡張子</h4>
-<p>カバレッジデータはBigWig file (.BigWig or .bw)、またはBam file
-(.bam)が利用可能です。 ピークコールデータはnarrowPeak file
-(.narrowPeak)、またはbed file (.bed)が利用可能です。 RNA-seq DEG result
-fileはタブ区切りtxt file (.txt)、カンマ区切りcsv file
-(.csv)、エクセルファイル (.xlsx)が利用可能です。<br><br></p>
+<p>カバレッジデータ:</p>
+<ul>
+<li>BigWig file (.BigWig or .bw)</li>
+<li>Bam file (.bam) (option for “Pair-wise” section)</li>
+</ul>
+<p>ピークコールデータ:</p>
+<ul>
+<li>narrowPeak file (.narrowPeak)</li>
+<li>bed file (.bed)</li>
+</ul>
+<p>RNA-seqデータ: - タブ区切りtxt file (.txt) - カンマ区切りcsv file
+(.csv) - エクセルファイル (.xlsx)</p>
 </div>
 <div id="bigwig-fileの形式" class="section level4">
 <h4>BigWig fileの形式</h4>
-<p>NormalizeされたBigWig file (例: Reads per million
-(RPM))を使用してください。</p>
+<p>NormalizeされたBigWig file (例: Reads per million (RPM,
+CPM))を使用してください。</p>
 </div>
 <div id="bigwig-fileおよびbam-fileのファイル名" class="section level4">
 <h4>BigWig fileおよびBam fileのファイル名</h4>
@@ -329,11 +367,11 @@ fileはタブ区切りtxt file (.txt)、カンマ区切りcsv file
 class="section level4">
 <h4>Peak call fileおよびBed fileのファイル名</h4>
 <ul>
-<li><p><strong>Pair-wise DAR、Clustering</strong><br>
+<li><p><strong>Pair-wise、Clustering</strong><br>
 サンプル名のn数（replicate number）は、アンダーバー「 _
 」を用いて表記してください。<br> アンダーバー「 _
 」は、n数の表記以外では使用できません。<br></p></li>
-<li><p><strong>Venn diagram、Enrichment viewer、Bedtools</strong><br>
+<li><p><strong>Venn diagram、Peaks of interest、Bedtools</strong><br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br></p></li>
 </ul>
@@ -365,10 +403,9 @@ pdf」を調整することで保存される図のサイズを変更できま�
 <hr />
 </div>
 </div>
-<div id="pair-wise-dar" class="section level1">
-<h1>Pair-wise DAR</h1>
-<p>２群間の比較解析を実行します。DAR（Differential accessible
-region）の同定・可視化・機能解析結果を出力します。</p>
+<div id="pair-wise" class="section level1">
+<h1>Pair-wise</h1>
+<p>２群間の比較解析を実行します。変化したピーク領域の同定・可視化・機能解析結果を出力します。</p>
 <div id="setting" class="section level2">
 <h2>Setting</h2>
 <p><img src="manual_figure/pair-wise%20set.png" id="id" class="class"
@@ -395,8 +432,7 @@ paired-end）が必要となります。<br>
 各サンプルのリード数が揃っている場合は、BigWig
 fileを用いた解析より精度の高い結果が得られます。しかし、各サンプルのリード数が大きく異なる場合は、解析に大きな誤差が生じることがあります。<br></li>
 <li><strong>Count file + BigWig fileを選ぶ場合</strong><br>
-過去にPair-wise
-DARによる解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
+過去に”Pair-wise”による解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
 このモードを用いることで、BigWigファイルからカウントデータを抽出するステップを省略することができます。<br>
 <strong>Type</strong>:カウントファイルを作成した条件によって変更してください。BigWigファイルをインプットとした場合は<strong>Normalized
 count</strong>、Bamファイルをインプットとした場合は<strong>Raw
@@ -471,15 +507,20 @@ class="section level4">
 <p>Principal Component Analysis (PCA)、Multi-Dimensional Scaling (MDS),
 ward.D2による階層的クラスタリングの3種類のクラスタリング解析を実行します。
 <br><br> <img src="manual_figure/pair-wise%20pca.png" id="id"
-class="class" style="width:90.0%" /><br><br> DAR解析の結果をvolcano
-plotとheatmapで表示します。<br> <strong>DAR
-resultテーブル</strong>の項目をクリックすると、volcano
+class="class" style="width:90.0%" /><br><br> 解析結果をvolcano
+plotとheatmapで表示します。<br>
+<strong>Resultテーブル</strong>の項目をクリックすると、volcano
 plotで表示される点のうち、選択した領域だけを緑色で表示します。<br></p>
+</div>
+<div id="regression" class="section level4">
+<h4>Regression</h4>
+<p>回帰分析の方法を選択できます。<br> <strong>least squares</strong>:
+最小二乗法を適用します。<br> <strong>robust</strong>:
+ロバスト会期を適用します。外れ値の影響を低減します。<br></p>
 </div>
 <div id="trackplotパネル" class="section level4">
 <h4>Trackplotパネル</h4>
-<p><strong>DAR
-resultテーブル</strong>の項目をクリックすると、選択した領域及びその近傍遺伝子のトラックプロットを表示します。<br>
+<p><strong>Resultテーブル</strong>の項目をクリックすると、選択した領域及びその近傍遺伝子のトラックプロットを表示します。<br>
 トラックプロットのハイライト（赤）は、選択した領域を示しています。<br>
 トラックプロットのピークの高さは、<strong>peak
 range</strong>で変更可能です。<br>
@@ -491,19 +532,20 @@ volcanoプロット中の興味あるゲノム領域を囲うことで、その�
 <img src="manual_figure/pair-wise%20overview2.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
-<div id="up_peaks及びdown_peaksパネル" class="section level4">
-<h4>Up_peaks及びDown_peaksパネル</h4>
-<p>表データとして、DAR (bed file)が出力されます。<br>
+<div id="red_peaks及びblue_peaksパネル" class="section level4">
+<h4>Red_peaks及びBlue_peaksパネル</h4>
+<p>表データとして、bed fileが出力されます。<br> Red_peaksはvolcano
+plotにおいて赤点で示される領域、Blue_peaksは青点で示される領域です。
 ダウンロードしたbed fileは<strong>Venn
-diagram</strong>や<strong>Clustering</strong>、<strong>Enrichment
-viewer</strong>セクションにそのままアップロード・再解析が可能です。<br><br>
+diagram</strong>や<strong>Clustering</strong>、<strong>Peaks of
+interest</strong>セクションにそのままアップロード・再解析が可能です。<br><br>
 <br><br></p>
 <hr />
 </div>
 </div>
-<div id="peak-distribution" class="section level3">
-<h3>Peak distribution</h3>
-<p>Up及びDownしたDARのannotation情報を円グラフとして出力します。<br>
+<div id="annotation" class="section level3">
+<h3>Annotation</h3>
+<p>変化したピーク領域のannotation情報を円グラフとして出力します。<br>
 円グラフは次の3種類のレベルで表示されます。<br></p>
 <ul>
 <li><p><strong>Gene Level</strong><br> Promoter, Downstream, Gene body,
@@ -518,8 +560,9 @@ id="id" class="class" style="width:90.0%" /><br><br></p></li>
 </div>
 <div id="peak-pattern" class="section level3">
 <h3>Peak pattern</h3>
-<p>Peak heatmap (Peakの頂点を中心にDARを並べたheatmapで表示)とline plot
-(各サンプルのDARにおけるピークの平均値をline
+<p>Peak heatmap
+(Peakの頂点を中心に変化したピーク領域を並べたheatmapで表示)とline plot
+(各サンプルの変化したピーク領域におけるピークの平均値をline
 plotで表示)を出力します。<br>
 追加のデータを表示したい場合には、<strong>select additional bigwig
 files</strong>からデータをアップロードしてください。<br><br> <img
@@ -530,7 +573,7 @@ style="width:90.0%" /><br><br></p>
 <div id="great" class="section level3">
 <h3>GREAT</h3>
 <p>GREAT (Genomic Regions Enrichment of Annotations
-Tool)をベースとしたエンリッチメント解析によりDARの機能を同定します。<br>
+Tool)をベースとしたエンリッチメント解析により変化したピーク領域の機能を同定します。<br>
 解析に使用できる遺伝子セットは、以下の通りです。<br> <a
 href="http://www.gsea-msigdb.org/gsea/msigdb/genesets.jsp?collection=H">MSigDB
 hallmark gene</a> <br> <a href="https://www.kegg.jp">KEGG</a> <br> <a
@@ -561,7 +604,7 @@ style="width:90.0%" /><br><br></p>
 <div id="homer" class="section level3">
 <h3>HOMER</h3>
 <p>HOMER (Hypergeometric Optimization of Motif
-EnRichment)をベースとしたエンリッチメント解析により、DARに含まれるDNA結合モチーフを同定します。<br></p>
+EnRichment)をベースとしたエンリッチメント解析により、変化したピーク領域に含まれるDNA結合モチーフを同定します。<br></p>
 <div id="type-of-enrichment-analysis" class="section level4">
 <h4>Type of enrichment analysis</h4>
 <p>“known motif”: known motifのみ解析します。<br> “known + unknown
@@ -579,8 +622,8 @@ motif”: known motifに加えてunknown motifの解析も行います。<br></p
 <p>“ramdom”:ゲノム領域からランダムにbackground
 sequenceを抽出します。<br> “peak calling
 files”:解析対象を除いたピーク領域をbackgroundとして利用します（例：up
-DARを解析する際はNS regionとdown
-DARをbackgroundとして利用）。randomと比べてよりspecificなmotifが予測できる可能性があります。</p>
+regionを解析する際はNS regionとdown
+regionをbackgroundとして利用）。randomと比べてよりspecificなmotifが予測できる可能性があります。</p>
 </div>
 <div id="download-homer-report" class="section level4">
 <h4>Download homer report</h4>
@@ -590,57 +633,121 @@ style="width:90.0%" /><br><br></p>
 <hr />
 </div>
 </div>
+<div id="combined-heatmap" class="section level3">
+<h3>Combined Heatmap</h3>
+<p>変化したピーク領域のエピゲノム情報（ChIP-seqやATAC-seqのPeakパターン）とそれに対応する遺伝子発現情報（RNAseqのカウントデータやFoldChange）をHeatmapで可視化します。<br>
+STARTボタンを押すと、解析を実行します。<br><br> <img
+src="manual_figure/pair-wise%20comb.png" id="id" class="class"
+style="width:90.0%" /><br><br> —</p>
+</div>
 <div id="with-rnaseq" class="section level3">
 <h3>with RNAseq</h3>
-<p>RNA-seqのDEG result
-fileをアップロードすることで、DAR(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
-RNA-seqのDEG result fileのフォーマットは以下の通りです。</p>
+<p>RNA-seqのデータをアップロードすることで、トランスクリプトームとの統合解析ができます。<br>
+RNA-seqのデータは以下の２種類をインプットとして使用することができます。<br></p>
+<div id="raw_count-2-conditions" class="section level4">
+<h4>Raw_count (2 conditions)</h4>
+<p>以下の条件を満たす場合、raw
+countデータを用いて解析を実行できます。</p>
+<pre><code>- 解析対象となる２群のデータのみで構成されるファイル
+- サンプル名のn数は、アンダーバー「 _ 」を用いて表記する
+- アンダーバー「 _ 」は、n数の表記以外では使用しない</code></pre>
+<p>DEG解析は<a
+href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8">DESeq2</a>が適用されます。<br>
+その他のアルゴリズムを用いたDEG解析結果を統合解析に使用したい場合は、<strong>DEG_Result
+from pair-wise
+analysis</strong>からDEG解析結果をアップロードして下さい。</p>
+<p><img src="manual_figure/input_format1.png" class="class"
+style="width:50.0%" alt="unchanged image" /><br></p>
+</div>
+<div id="deg_result-from-pair-wise-analysis" class="section level4">
+<h4>DEG_Result from pair-wise analysis</h4>
+<p>RNA-seqのDEG result fileのフォーマットは以下の通りです。</p>
 <ul>
 <li>拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか</li>
 <li>1行目はgene symbolまたはENSEMBL ID</li>
 <li>カラム名が「log2FoldChange」及び「padj」の列を含む</li>
 </ul>
 <p>上記の条件を満たせば、bulk
-RNA-seqまたはscRNA-seqのデータが使用できます。<br>
+RNA-seqまたはscRNA-seqのデータが使用できます。<br> <strong>Name of
+condition 1/2</strong>: RNA-seqの２群の条件名を記入できます。<br>
 <strong>注意点</strong>: Log2FoldChangeは「A vs
 B」の場合、Log2(A/B)で計算されるため、Upは負の値となります。RNAseqChef以外で取得したDEG
 resultファイルを利用される場合は、正負の値に注意して下さい。<br><br>
 <img src="manual_figure/pair-wise%20DEG.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
+</div>
 <div id="regulatory-potential-rpをベースとした解析について"
 class="section level4">
 <h4>Regulatory Potential (RP)をベースとした解析について</h4>
-<p>Epigenome(DAR)の解析結果では以下のようなケースがあります。<br>
+<p>Epigenomeの解析結果では以下のようなケースがあります。<br>
 １遺伝子に対して</p>
 <ul>
-<li>複数のDARが近傍に局在</li>
-<li>upとdownの両方のDARが局在</li>
+<li>複数の変化したピークが近傍に局在</li>
+<li>upとdownの両方のピークが局在</li>
 </ul>
 <p>遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
 本アプリでは、エピゲノム情報を一つのスコアにまとめるために<strong>Regulatory
 Potential (RP)</strong>の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
+RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。<br>
+<strong>Pair-wise</strong>ではpair-wise解析用に独自に改良したRPを使用することもできます。<br>
+<strong>改良点1</strong>:
+TSSから離れたピークでも変化率が大きいピークは重要と考えられるので、変化率でピークを重み付けします(Fold
+change weighting)。<br> <strong>改良点2</strong>:
+増加したピークだけでなく減少したピークにも同時に対応できるように負の値まで拡張します。<br>
 RPスコアに反映されるTSSからのピークの最大距離は100kb（<strong>Regulatory
 range (distance (kb) from TSS)</strong>より変更可能）です。
 RNAseqのDEGのcutoffは、<strong>Fold change cutoff for RNA-seq
 data</strong>及び<strong>FDR cutoff for RNA-seq
 data</strong>より設定できます（defaultはfold change = 1.5, fdr =
-0.05）。</p>
+0.05）。
+RPの定義は以下の選択肢をクリックすることで簡単に切り替えることができます。</p>
+<ul>
+<li>Fold change weighting (combined):
+従来のRPに改良点1と改良点2を加えて計算</li>
+<li>Fold change weighting (individual):
+従来のRPに改良点2のみを加えて計算</li>
+<li>No weighting (combined): 従来のRPに改良点1のみを加えて計算</li>
+<li>Classical (No weighting (individual)): 従来のRPで計算</li>
+</ul>
+<p><img src="manual_figure/regulatory_potential.png" id="id"
+class="class" style="width:90.0%" /><br><br></p>
+</div>
+<div id="mode" class="section level4">
+<h4>Mode</h4>
+<p>遺伝子とピークの紐付けの方法を選択できます。<br>
+<strong>Nearest</strong>:
+各ピークを最も近傍の遺伝子のみと紐付けます(１つのピークにつき１つの遺伝子)。<br>
+<strong>Gene scan</strong>:
+各ピークを指定した範囲に含まれるすべての遺伝子と紐付けます(１つのピークにつき複数の遺伝子)。<br><br>
+<img src="manual_figure/pair-wise%20withRNAseq_mode.png" id="id"
+class="class" style="width:100.0%" /><br><br></p>
 </div>
 <div id="boxplot" class="section level4">
 <h4>Boxplot</h4>
-<p>RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP &gt; 1)、RPが１より小さい遺伝子(RP
-&lt; -1)、その他(Others)です。<br> 統計解析はTukeyHSDを実行します。*
-p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001<br>
+<p>RPの値を指標に遺伝子を分類し、各グループのlog10FoldChangeの値をプロットします。<br>
+combinedの場合: RP &lt; -1, -1 &lt; RP &lt; -0.1, -0.1 &lt; RP &lt;
+-0.01, -0.01 &lt; RP &lt; 0, others, 0 &lt; RP &lt; 0.01, 0.01 &lt; RP
+&lt; 0.1, 0.1 &lt; RP &lt; 1, RP &gt; 1<br> individualの場合: others, 0
+&lt; RP &lt; 0.01, 0.01 &lt; RP &lt; 0.1, 0.1 &lt; RP &lt; 1, 1 &lt; RP
+&lt; 2, RP &gt; 2<br> 統計解析はTukeyHSDを実行します。* p&lt;0.05, **
+p&lt;0.01, *** p&lt;0.001<br>
 着目するEpigenome変化がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
-<img src="manual_figure/pair-wise%20boxplot.png" id="id" class="class"
+<img src="manual_figure/venn%20boxplot.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="barplot" class="section level4">
 <h4>Barplot</h4>
-<p>DEGのうち、RPが0以上(または0以下)の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上(または0以下)の遺伝子のうち、DEGがどの程度存在するかを表示する。<br></p>
+<p>以下の棒グラフを表示します。</p>
+<ul>
+<li>上:
+RNA-seqで定義される各カテゴリーの遺伝子について紐付けられたピークの数をヒストグラムで示します。</li>
+<li>下:
+エピゲノムのPair-wise解析結果から定義される各カテゴリーのピークについて紐付けられた遺伝子の数をヒストグラムで示します。</li>
+</ul>
+<p><strong>注意点</strong>:
+modeをNearestに指定した場合は紐付けられる遺伝子の数は必ず１となります(下図)。
+<img src="manual_figure/venn%20barplot.png" id="id" class="class"
+style="width:90.0%" /><br><br></p>
 </div>
 <div id="ks-plot" class="section level4">
 <h4>KS plot</h4>
@@ -648,39 +755,38 @@ style="width:90.0%" /><br><br></p>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
 着目するEpigenome変化（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
-<img src="manual_figure/pair-wise%20barplot.png" id="id" class="class"
+<img src="manual_figure/venn%20ks.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="result-tableパネル" class="section level4">
 <h4>Result tableパネル</h4>
 <p>TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(<strong>Group(RNA-Epigenome)</strong>より選択可能)の情報をテーブルデータとして出力します。<br>
-各グループに対応するDARは、bed形式でダウンロードすることも可能です。<br>
+例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(<strong>Group(Epigenome:RNA)</strong>より選択可能)の情報をテーブルデータとして出力します。<br>
+各グループに対応する変化したピーク領域は、bed形式でダウンロードすることも可能です。<br>
 ダウンロードしたbed fileは<strong>Venn
-diagram</strong>や<strong>Clustering</strong>、<strong>Enrichment
-viewer</strong>セクションにそのままアップロード・再解析が可能です。<br>
-興味ある項目をクリックすると、<strong>Trackplotパネル</strong>に選択したDAR及び近傍遺伝子のトラックプロットが出力されます。<br><br>
+diagram</strong>や<strong>Clustering</strong>、<strong>Peaks of
+interest</strong>セクションにそのままアップロード・再解析が可能です。<br>
+興味ある項目をクリックすると、<strong>Trackplotパネル</strong>に選択した変化したピーク領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
 <img src="manual_figure/pair-wise%20rnaseqtrackplot.png" id="id"
 class="class" style="width:90.0%" /><br><br></p>
 </div>
 <div id="functional-enrichment-analysisパネル" class="section level4">
 <h4>Functional enrichment analysisパネル</h4>
 <p>興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
-このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
-解析は、<a
+このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。<br>
+<strong>Category</strong>: 遺伝子のカテゴリーの方法を指定できます。
+<strong>RP status (from
+boxplot)</strong>ではボックスプロットに表示されているRPでカテゴリーした遺伝子を選択できます。
+<strong>Relationship (Epigenome:RNAseq)</strong>ではResult
+tableパネルに表示されるGroupでカテゴリーした遺伝子を選択できます。<br>
+<strong>Gene set</strong>:
+エンリッチメント解析に使用する遺伝子セットを選択できます。<br></p>
+<p>解析は、<a
 href="https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html">ClusterProfiler</a>に依存します。<br><br>
 <img src="manual_figure/pair-wise%20rnaseqenrich.png" id="id"
 class="class" style="width:90.0%" /><br><br></p>
 <hr />
 </div>
-</div>
-<div id="combined-heatmap" class="section level3">
-<h3>Combined Heatmap</h3>
-<p>UpおよびDownしたPeakに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
-STARTボタンを押すと、解析を実行します。<br><br> <img
-src="manual_figure/pair-wise%20comb.png" id="id" class="class"
-style="width:90.0%" /><br><br></p>
-<hr />
 </div>
 </div>
 </div>
@@ -729,50 +835,40 @@ BigWigファイルの順番を並び替えることができます。<br>
 <h3>Venn diagram</h3>
 <p>アップロードしたbed fileのoverlap領域を同定します。<br>
 結果として、Venn diagramを出力します。<br>
-また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。
-<br><br> <img src="manual_figure/venn%20venn.png" id="id" class="class"
-style="width:90.0%" alt="venn input" /><br><br> #### Lineplot of
-intersections (comparison between intersections)
-アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
-一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br></p>
-<div id="lineplot-of-intersections-comparison-between-bigwig"
-class="section level4">
-<h4>Lineplot of intersections (comparison between bigwig)</h4>
-<p>アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br></p>
-<p><img src="manual_figure/venn%20lineplot.png" id="id" class="class"
+また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。<br><br>
+<img src="manual_figure/venn%20venn.png" id="id" class="class"
 style="width:90.0%" alt="venn input" /><br><br></p>
-<hr />
-</div>
-</div>
-<div id="peak-pattern-1" class="section level3">
-<h3>Peak pattern</h3>
-<p><strong>Select intersect</strong>から選択したvenn図の領域に関してPeak
-patternを分析します。<br>
+<div id="intersection-table" class="section level4">
+<h4>Intersection table</h4>
+<p><strong>Selected
+intersect</strong>から興味あるベン図の領域を選択することで、その領域の位置情報が表示されます。<br>
 intersectのハイフン”-“はoverlapを意味します。。<br>
 例：A.bedとB.bedの解析の場合。<br> A: Bと重複しないAの領域<br> B:
 Aと重複しないBの領域<br> A-B: AとBのoverlap領域<br></p>
-<div id="peak-heatmapとline-plot" class="section level4">
-<h4>Peak heatmapとline plot</h4>
-<p>BigWig fileをアップロードした場合、表示されます。<br>
-選択した領域に関して中央から前後2000kbの領域をheatmap及びline
-plotとして出力します。<br>
-さらに追加のデータを表示したい場合には、<strong>select additional bigwig
-files</strong>からデータをアップロードしてください。<br></p>
+<p>ダウンロードボタンを押すことで、ベン図で示されるすべての領域のbedファイルを取得できます。<br>
+ダンロードしたbedファイルは<strong>Clustering</strong>、<strong>Peaks of
+interest</strong>セクションのインプットとしてアップロード・再解析が可能です。<br><br></p>
+<hr />
 </div>
-<div id="peak-distribution-1" class="section level4">
-<h4>Peak distribution</h4>
-<p>Speciesを選択した場合、表示されます。<br>
-選択した領域のannotation情報を円グラフとして出力します。<br>
-円グラフは次の3種類のレベルで表示されます。</p>
+</div>
+<div id="annotation-1" class="section level3">
+<h3>Annotation</h3>
+<p>変化したピーク領域のannotation情報を円グラフとして出力します。<br>
+円グラフは次の3種類のレベルで表示されます。<br></p>
 <ul>
 <li><p><strong>Gene Level</strong><br> Promoter, Downstream, Gene body,
 Distal intergenic<br></p></li>
 <li><p><strong>Exon/Intron/Intergenic</strong><br> Exon, Intron,
 Intergenic<br></p></li>
 <li><p><strong>Exon Level</strong><br> 5’ UTR, 3’ UTR, CDS, Other
-exon<br><br> <img src="manual_figure/venn%20pattern.png" id="id"
-class="class" style="width:90.0%" alt="venn input" /><br><br></p></li>
+exon<br><br></p></li>
 </ul>
+<div id="selected-intersect-dataパネル" class="section level4">
+<h4>selected intersect dataパネル</h4>
+<p>選択した領域の情報が表データとして出力されます。<br>
+近傍の遺伝子やannotation情報をtxt fileとしてダウンロード可能です。<br>
+<img src="manual_figure/venn_annotation.png" id="id" class="class"
+style="width:90.0%" alt="venn input" /><br><br></p>
 </div>
 <div id="trackplotパネル-1" class="section level4">
 <h4>Trackplotパネル</h4>
@@ -786,13 +882,28 @@ additional bigwig
 files</strong>からデータをアップロードしてください。<br><br> <img
 src="manual_figure/venn%20trackplot.png" id="id" class="class"
 style="width:90.0%" alt="venn input" /><br><br></p>
+<hr />
 </div>
-<div id="selected-intersect-dataパネル" class="section level4">
-<h4>selected intersect dataパネル</h4>
-<p>選択した領域の情報が表データとして出力されます。<br>
-近傍の遺伝子やannotation情報をtxt fileとしてダウンロード可能です。<br>
-また、bed形式としてもダウンロード可能です。ダンロードしたbedファイルは<strong>Clustering</strong>、<strong>Enrichment
-viewer</strong>セクションのインプットとしてアップロード・再解析が可能です。<br><br></p>
+</div>
+<div id="peak-pattern-1" class="section level3">
+<h3>Peak pattern</h3>
+<p>BigWig fileをアップロードした場合、表示されます。<br>
+選択した領域に関して中央から前後2000kbの領域をheatmap及びline
+plotとして出力します。<br>
+さらに追加のデータを表示したい場合には、<strong>select additional bigwig
+files</strong>からデータをアップロードしてください。<br></p>
+<div id="lineplot-of-intersections-comparison-between-intersections"
+class="section level4">
+<h4>Lineplot of intersections (comparison between intersections)</h4>
+<p>アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
+一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br></p>
+</div>
+<div id="lineplot-of-intersections-comparison-between-bigwig"
+class="section level4">
+<h4>Lineplot of intersections (comparison between bigwig)</h4>
+<p>アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br></p>
+<p><img src="manual_figure/venn%20lineplot.png" id="id" class="class"
+style="width:90.0%" alt="venn input" /><br><br></p>
 <hr />
 </div>
 </div>
@@ -865,63 +976,122 @@ style="width:90.0%" alt="venn input" /><br><br></p>
 </div>
 <div id="with-rnaseq-1" class="section level3">
 <h3>with RNAseq</h3>
-<p>RNA-seqのDEG(発現変動遺伝子) result
-fileをアップロードすることで、<strong>Select
-intersect</strong>から選択したvenn図の領域(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
-RNA-seqのDEG result fileのフォーマットは以下の通りです。</p>
+<p>RNA-seqのデータをアップロードすることで、トランスクリプトームとの統合解析ができます。<br>
+RNA-seqのデータは以下の２種類をインプットとして使用することができます。<br></p>
+<div id="raw_count-2-conditions-1" class="section level4">
+<h4>Raw_count (2 conditions)</h4>
+<p>以下の条件を満たす場合、raw
+countデータを用いて解析を実行できます。</p>
+<pre><code>- 解析対象となる２群のデータのみで構成されるファイル
+- サンプル名のn数は、アンダーバー「 _ 」を用いて表記する
+- アンダーバー「 _ 」は、n数の表記以外では使用しない</code></pre>
+<p>DEG解析は<a
+href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8">DESeq2</a>が適用されます。<br>
+その他のアルゴリズムを用いたDEG解析結果を統合解析に使用したい場合は、<strong>DEG_Result
+from pair-wise
+analysis</strong>からDEG解析結果をアップロードして下さい。</p>
+<p><img src="manual_figure/input_format1.png" class="class"
+style="width:50.0%" alt="unchanged image" /><br></p>
+</div>
+<div id="deg_result-from-pair-wise-analysis-1" class="section level4">
+<h4>DEG_Result from pair-wise analysis</h4>
+<p>RNA-seqのDEG result fileのフォーマットは以下の通りです。</p>
 <ul>
 <li>拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか</li>
 <li>1行目はgene symbolまたはENSEMBL ID</li>
 <li>カラム名が「log2FoldChange」及び「padj」の列を含む</li>
 </ul>
 <p>上記の条件を満たせば、bulk
-RNA-seqまたはscRNA-seqのデータが使用できます。<br><br> <img
-src="manual_figure/pair-wise%20DEG.png" id="id" class="class"
+RNA-seqまたはscRNA-seqのデータが使用できます。<br> <strong>Name of
+condition 1/2</strong>: RNA-seqの２群の条件名を記入できます。<br>
+<strong>注意点</strong>: Log2FoldChangeは「A vs
+B」の場合、Log2(A/B)で計算されるため、Upは負の値となります。RNAseqChef以外で取得したDEG
+resultファイルを利用される場合は、正負の値に注意して下さい。<br><br>
+<img src="manual_figure/pair-wise%20DEG.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
+</div>
+<div id="gene_list" class="section level4">
+<h4>Gene_list</h4>
+<p>遺伝子リストを使用する場合は、同時にアップロードするファイルの数に依存してファイル形式のルールが変わります。
+<strong>単一のファイルをアップロードする場合</strong>:<br> -
+１列目は、遺伝子名 - ２列目は、遺伝子に対応するグループ名 -
+３列目以降は解析に影響しません - ファイル名は、拡張子以外でピリオド「 .
+」を使用しない
+３列目以降は解析に影響しないため、カウントデータが含まれていても問題ありません。<br>
+RNAseqChefのVenn diagramやk-means
+clusteringで得たテーブルデータに関しては形式を変更せずにそのまま使用することができます。<br><br>
+<strong>複数のファイルを同時にアップロードする場合</strong>: <br> -
+１列目は、遺伝子名 - ２列目以降は、解析に影響しません -
+ファイル名が、Group名として使用されます -
+ファイル名は、拡張子以外でピリオド「 . 」を使用しない</p>
+<p>例: 単一ファイルのアップロードの場合 <img
+src="manual_figure/input_format_enrich.png" id="id" class="class"
+style="width:50.0%" /><br><br></p>
+</div>
 <div id="regulatory-potential-rpをベースとした解析について-1"
 class="section level4">
 <h4>Regulatory Potential (RP)をベースとした解析について</h4>
-<p>Epigenomeの解析結果では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
+<p>Epigenomeの解析では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
 遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
 本アプリでは、エピゲノム情報を一つのスコアにまとめるために<strong>Regulatory
 Potential (RP)</strong>の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
+RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように各ピークをスコア化し、足し合わせたものとして定義されます。
 RPスコアに反映されるTSSからのピークの最大距離は100kb（<strong>Regulatory
 range (distance (kb) from TSS)</strong>より変更可能）です。
 RNAseqのDEGのcutoffは、<strong>Fold change cutoff for RNA-seq
 data</strong>及び<strong>FDR cutoff for RNA-seq
 data</strong>より設定できます（defaultはfold change = 1.5, fdr =
-0.05）。</p>
+0.05）。<br> <img src="manual_figure/traditional_RP.png" id="id"
+class="class" style="width:90.0%" /><br><br></p>
+</div>
+<div id="mode-1" class="section level4">
+<h4>Mode</h4>
+<p>遺伝子とピークの紐付けの方法を選択できます。<br>
+<strong>Nearest</strong>:
+各ピークを最も近傍の遺伝子のみと紐付けます(１つのピークにつき１つの遺伝子)。<br>
+<strong>Gene scan</strong>:
+各ピークを指定した範囲に含まれるすべての遺伝子と紐付けます(１つのピークにつき複数の遺伝子)。<br><br>
+<img src="manual_figure/pair-wise%20withRNAseq_mode.png" id="id"
+class="class" style="width:100.0%" /><br><br></p>
 </div>
 <div id="boxplot-1" class="section level4">
 <h4>Boxplot</h4>
-<p>RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP &gt; 1)、その他(Others)です。<br>
-統計解析はWelch’s t-testを実行します。* p&lt;0.05, ** p&lt;0.01, ***
-p&lt;0.001<br>
+<p>RPの値を指標に遺伝子を分類し、各グループのlog10FoldChangeの値をプロットします。<br>
+others, 0 &lt; RP &lt; 0.01, 0.01 &lt; RP &lt; 0.1, 0.1 &lt; RP &lt; 1,
+1 &lt; RP &lt; 2, RP &gt; 2<br> 統計解析はTukeyHSDを実行します。*
+p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001<br>
 着目するゲノム領域がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
 <img src="manual_figure/venn%20boxplot.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="barplot-1" class="section level4">
 <h4>Barplot</h4>
-<p>DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上の遺伝子のうち、DEGがどの程度存在するかを表示する。<br><br></p>
+<p>以下の棒グラフを表示します。</p>
+<ul>
+<li>上:
+RNA-seqで定義される各カテゴリーの遺伝子について紐付けられたピークの数をヒストグラムで示します。</li>
+<li>下:
+Venn図解析結果から定義される各カテゴリーのピークについて紐付けられた遺伝子の数をヒストグラムで示します。</li>
+</ul>
+<p><strong>注意点</strong>:
+modeをNearestに指定した場合は紐付けられる遺伝子の数は必ず１となります(下図)。
+<img src="manual_figure/pair-wise%20barplot.png" id="id" class="class"
+style="width:100.0%" /><br><br></p>
 </div>
 <div id="ks-plot-1" class="section level4">
 <h4>KS plot</h4>
-<p>RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
+<p>RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します(Gene_listをインプットとした場合は、定義したクラスターとそれ以外の遺伝子の分布を比較します)。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
 着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
-<strong>intersect_associated</strong>は選択したintersectに含まれるゲノム領域が近傍に局在する遺伝子です。<br></p>
-<p><img src="manual_figure/venn%20barplot.png" id="id" class="class"
+<strong>intersect_associated</strong>は選択したintersectに含まれるゲノム領域が近傍に局在する遺伝子です。<br>
+<img src="manual_figure/venn%20barplot.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="result-tableパネル-1" class="section level4">
 <h4>Result tableパネル</h4>
 <p>TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(<strong>Group(RNA-Epigenome)</strong>より選択可能)の情報をテーブルデータとして出力します。<br>
+例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(<strong>Group(Epigenome:RNA)</strong>より選択可能)の情報をテーブルデータとして出力します。<br>
 venn diagramやmotif解析用にbed形式でダウンロードすることも可能です。<br>
 興味ある項目をクリックすると、<strong>Trackplotパネル</strong>に選択した領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
 <img src="manual_figure/venn%20rnaseqtrackplot.png" id="id"
@@ -931,10 +1101,17 @@ class="class" style="width:90.0%" /><br><br></p>
 <h4>Functional enrichment analysisパネル</h4>
 <p>興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
 このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
+<strong>Category</strong>: 遺伝子のカテゴリーの方法を指定できます。
+<strong>RP status (from
+boxplot)</strong>ではボックスプロットに表示されているRPでカテゴリーした遺伝子を選択できます。
+<strong>Relationship (Epigenome:RNAseq)</strong>ではResult
+tableパネルに表示されるGroupでカテゴリーした遺伝子を選択できます。<br>
+<strong>Gene set</strong>:
+エンリッチメント解析に使用する遺伝子セットを選択できます。<br>
 解析は、<a
 href="https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html">ClusterProfiler</a>に依存します。<br><br>
-<img src="manual_figure/venn%20rnaseqenrich.png" id="id" class="class"
-style="width:90.0%" /><br><br> —</p>
+<img src="manual_figure/pair-wise%20rnaseqenrich.png" id="id"
+class="class" style="width:90.0%" /><br><br> —</p>
 </div>
 </div>
 <div id="combined-heatmap-1" class="section level3">
@@ -951,12 +1128,11 @@ STARTボタンを押すと、解析を実行します。</p>
 <div id="clustering" class="section level1">
 <h1>Clustering</h1>
 <p>BigWig fileのクラスタリング解析を実行します。
-本セクションの用途は大きく分けて二つあります。
-１つ目は、PCAやMDS、dendrogram、correlation
+本セクションの用途は大きく分けて二つあります。 -
+PCAやMDS、dendrogram、correlation
 plotによるデータの俯瞰です。アップロードしたデータの大まかな類似性を可視化します。
-２つ目は、k-means
-clusteringを用いた詳細なゲノム領域の分析です。Pair-wise DARやVenn
-diagramで同定した領域をk-means
+- ２つ目は、k-means
+clusteringを用いた詳細なゲノム領域の分析です。興味あるゲノム領域をk-means
 clusteringを用いて細分化・機能評価を行います。</p>
 <div id="setting-2" class="section level2">
 <h2>Setting</h2>
@@ -976,10 +1152,10 @@ Genome-wideまたはPromoterの選択</li>
 <li><p><strong>Genome-wideを選ぶ場合</strong><br> Bed
 fileのアップロードが必要となります。<br>
 目的がデータの俯瞰の場合は、アップロードしたBigWigファイルに対応する全てのpeak
-call fileをアップロードしてください。(Pair-wise
-DARのようなFilter機能はありません。アップロードしたbed
+call fileをアップロードしてください。(“Pair-wise”
+のようなFilter機能はありません。アップロードしたbed
 fileに含まれる全てのゲノム領域をカウント化します。)<br> 目的がk-means
-clusteringを用いた詳細なゲノム領域の分析の場合は、Pair-wise DARやVenn
+clusteringを用いた詳細なゲノム領域の分析の場合は、Pair-wiseやVenn
 diagramなどにより得たbed fileをアップロードしてください。
 bedファイルに含まれるゲノム領域のみをカウント化します。 （k-means
 clusteringを実行できるゲノム領域の数は最大10,000までのため、解析対象となるゲノム領域をある程度絞り込んだbed
@@ -1049,39 +1225,53 @@ style="width:90.0%" /><br><br></p>
 </div>
 <div id="k-means-clustering" class="section level3">
 <h3>k-means clustering</h3>
-<p>k-means clusteringを実行します。
-解析対象となるゲノム領域の数は、memoryの都合上、最大10,000領域(defaultは2000
-loci。<strong>Most variable loci</strong>で変更可能)までです。<br></p>
+<p>k-means clusteringを実行します。</p>
+<div id="オプション-filter-1-fdr-cut-off" class="section level4">
+<h4>オプション: Filter 1 (FDR cut-off)</h4>
+<p>一つの条件にn=2以上のサンプルがある場合、Limma-trendを用いた統計解析を実行することができます。<br>
+指定したFDRに満たないゲノム領域をcut-offすることができます。<br></p>
+<p>If the uploaded data lacks replicates, this analysis will be
+skipped.<br><br> <img src="manual_figure/clustering%20statistical.png"
+id="id" class="class" style="width:90.0%" /><br><br></p>
+</div>
+<div id="オプション-filter-2-fold-change-cut-off"
+class="section level4">
+<h4>オプション: Filter 2 (Fold change cut-off)</h4>
+<p>Fold change
+cut-offを適応したい条件のペアを最大二つ選択することができます。<br>
+(例：条件A, B,
+Cの解析の場合、「AとBで2倍以上変化」かつ「BとCで2倍以上変化」したゲノム領域を抽出することができます)<br>
+Choose the two groups from <strong>Select a pair for fold change
+cut-off</strong> for which you want to apply the Fold Change
+cut-off.<br></p>
 <ul>
-<li><strong>Select a pair for fold change cut-off</strong><br> Fold
-changeでcut-offしたい２群を選択できます。<br>
-cut-off後のゲノム領域の数が赤字で表示されるので、その数字を参考に<strong>Most
-variable loci</strong>を設定してください。<br></li>
 <li><strong>k-means number</strong><br>
-クラスターの数を設定します。</li>
-<li><strong>Most variable loci</strong><br>
-cut-off後のゲノム領域の数が<strong>Most variable
-loci</strong>で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br></li>
+クラスターの数を設定します。<br></li>
+<li><strong>Start</strong>ボタン<br>
+Startボタンを押すと解析が実行されます。<br>
+解析対象のゲノム領域の数が多いと非常に時間がかかります。<br>
+(webバージョンの場合、1万を大きく超えるゲノム領域を解析する場合はサーバーダウンする可能性があります)<br></li>
 <li><strong>Order of clusters on heatmap</strong><br>
 ヒートマップ上のクラスターの順番を変更することができます。<br> ※
-デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。</li>
+デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。<br></li>
 </ul>
-<p><img src="manual_figure/clustering%20kmeans.png" id="id"
+<p><strong>’Download bed files of all
+clusters’を押すことで、すべてのクラスターのbedファイルをダウンロードすることができます。</strong></p>
+<p><img src="manual_figure/cluster_filter_kmeans.png" id="id"
 class="class" style="width:90.0%" /><br><br></p>
-<p><strong>cluster_list</strong>から興味あるClusterを選択することで、さらに詳細な解析ができます。<br>
-なお、<strong>cluster_list</strong>で複数のClusterを選択した場合は、選択した全てのClusterを同一のClusterとみなして解析します（それぞれのクラスターを個別に解析するわけではありません）。<br></p>
-<div id="peak-pattern-2" class="section level4">
-<h4>Peak pattern</h4>
-<p>選択したClusterのPeak heatmapとline plotを出力します。<br>
-追加のデータを表示したい場合には、<strong>select additional bigwig
-files</strong>からデータをアップロードしてください。<br><br> <img
+</div>
+<div id="custom-clusterパネル" class="section level4">
+<h4>Custom clusterパネル</h4>
+<p><strong>cluster_list</strong>から結合したいClusterを選択することで、選択したClusterを同一のClusterとみなしてbedファイルを作成します。<br>
+Custom clusterのピークパターンがヒートマップとline
+plotとして可視化されます。 <img
 src="manual_figure/clustering%20pattern.png" id="id" class="class"
 style="width:90.0%" /><br><br></p>
 </div>
 <div id="trackplotパネル-2" class="section level4">
 <h4>Trackplotパネル</h4>
-<p><strong>selected cluster
-dataパネル</strong>の項目をクリックすると、選択した項目のトラックプロットを表示します。<br>
+<p><strong>Custom
+clusterパネル</strong>の項目をクリックすると、選択した項目のトラックプロットを表示します。<br>
 トラックプロットのハイライト（赤）は、選択した領域を示しています。<br>
 トラックプロットのピークの高さは、<strong>peak
 range</strong>で変更可能です。<br>
@@ -1093,85 +1283,10 @@ style="width:90.0%" alt="venn input" /><br><br></p>
 <hr />
 </div>
 </div>
-<div id="with-rnaseq-2" class="section level3">
-<h3>with RNAseq</h3>
-<p>RNA-seqのDEG(発現変動遺伝子) result
-fileをアップロードすることで、<strong>k-means cluster
-list</strong>から選択したClusterの領域(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
-RNA-seqのDEG result fileのフォーマットは以下の通りです。</p>
-<ul>
-<li>拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか</li>
-<li>1行目はgene symbolまたはENSEMBL ID</li>
-<li>カラム名が「log2FoldChange」及び「padj」の列を含む</li>
-</ul>
-<p>上記の条件を満たせば、bulk
-RNA-seqまたはscRNA-seqのデータが使用できます。<br><br> <img
-src="manual_figure/pair-wise%20DEG.png" id="id" class="class"
-style="width:90.0%" /><br><br></p>
-<div id="regulatory-potential-rpをベースとした解析について-2"
-class="section level4">
-<h4>Regulatory Potential (RP)をベースとした解析について</h4>
-<p>Epigenomeの解析結果では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
-遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
-本アプリでは、エピゲノム情報を一つのスコアにまとめるために<strong>Regulatory
-Potential (RP)</strong>の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
-RPスコアに反映されるTSSからのピークの最大距離は100kb（<strong>Regulatory
-range (distance (kb) from TSS)</strong>より変更可能）です。
-RNAseqのDEGのcutoffは、<strong>Fold change cutoff for RNA-seq
-data</strong>及び<strong>FDR cutoff for RNA-seq
-data</strong>より設定できます（defaultはfold change = 1.5, fdr =
-0.05）。</p>
-</div>
-<div id="boxplot-2" class="section level4">
-<h4>Boxplot</h4>
-<p>RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP &gt; 1)、その他(Others)です。<br>
-統計解析はWelch’s t-testを実行します。* p&lt;0.05, ** p&lt;0.01, ***
-p&lt;0.001<br>
-着目するゲノム領域がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
-<img src="manual_figure/clustering%20boxplot.png" id="id" class="class"
-style="width:90.0%" /><br><br></p>
-</div>
-<div id="barplot-2" class="section level4">
-<h4>Barplot</h4>
-<p>DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上の遺伝子のうち、DEGがどの程度存在するかを表示する。<br><br></p>
-</div>
-<div id="ks-plot-2" class="section level4">
-<h4>KS plot</h4>
-<p>RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
-例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
-Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
-<strong>cluster_associated</strong>は選択したclusterに含まれるゲノム領域が近傍に局在する遺伝子です。<br><br>
-<img src="manual_figure/clustering%20barplot.png" id="id" class="class"
-style="width:90.0%" /><br><br></p>
-</div>
-<div id="result-tableパネル-2" class="section level4">
-<h4>Result tableパネル</h4>
-<p>TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(<strong>Group(RNA-Epigenome)</strong>より選択可能)の情報をテーブルデータとして出力します。<br>
-venn diagramやmotif解析用にbed形式でダウンロードすることも可能です。<br>
-興味ある項目をクリックすると、<strong>Trackplotパネル</strong>に選択した領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
-<img src="manual_figure/clustering%20rnaseqtrackplot.png" id="id"
-class="class" style="width:90.0%" /><br><br></p>
-</div>
-<div id="functional-enrichment-analysisパネル-2" class="section level4">
-<h4>Functional enrichment analysisパネル</h4>
-<p>興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
-このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
-解析は、<a
-href="https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html">ClusterProfiler</a>に依存します。<br><br>
-<img src="manual_figure/clustering%20rnaseqenrich.png" id="id"
-class="class" style="width:90.0%" /><br><br></p>
-<hr />
 </div>
 </div>
-</div>
-</div>
-<div id="enrichment-viewer" class="section level1">
-<h1>Enrichment viewer</h1>
+<div id="peaks-of-interest" class="section level1">
+<h1>Peaks of interest</h1>
 <p>bed
 fileに含まれるゲノム領域に対してエンリッチメント解析を実行します。<br>
 Venn diagramやk-means
@@ -1187,8 +1302,8 @@ style="width:50.0%" alt="venn diagram set" /><br></p>
 <div id="input-2" class="section level4">
 <h4>Input</h4>
 <ul>
-<li><strong>Bed files</strong><br> Enrichment
-viewerにおいて必ず必要となるファイルです。<br>
+<li><strong>Bed files</strong><br> Peaks of
+interestにおいて必ず必要となるファイルです。<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br></li>
 </ul>
@@ -1325,7 +1440,7 @@ style="width:90.0%" alt="venn input" /><br><br></p>
 <h1>Tips</h1>
 <div id="homer-background-sequenceの差" class="section level2">
 <h2>HOMER: Background sequenceの差</h2>
-<p>例: ATAC-seqのサンプルでpair-wise DARを実行 <img
+<p>例: ATAC-seqのサンプルでPair-wiseを実行 <img
 src="manual_figure/motif%20background.png" id="id" class="class"
 style="width:100.0%" alt="venn input" /><br><br></p>
 </div>
@@ -1641,106 +1756,108 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ## 
 ## other attached packages:
 ##   [1] Gviz_1.40.1                                  
-##   [2] webshot_0.5.4                                
-##   [3] magick_2.7.4                                 
-##   [4] pdftools_3.3.3                               
-##   [5] EnrichedHeatmap_1.26.0                       
-##   [6] ggrastr_1.0.1                                
-##   [7] ggsci_3.0.0                                  
-##   [8] reshape2_1.4.4                               
-##   [9] venn_1.11                                    
-##  [10] RColorBrewer_1.1-3                           
-##  [11] ggcorrplot_0.1.4                             
-##  [12] colorspace_2.1-0                             
-##  [13] plotmics_7.0.1                               
-##  [14] marge_0.0.4.9999                             
-##  [15] ggseqlogo_0.1                                
-##  [16] limma_3.52.4                                 
-##  [17] FindIT2_1.2.3                                
-##  [18] rGREAT_1.28.0                                
-##  [19] ChIPpeakAnno_3.30.1                          
-##  [20] ChIPseeker_1.32.1                            
-##  [21] soGGi_1.10.4                                 
-##  [22] dorothea_1.8.0                               
-##  [23] clusterProfiler.dplyr_0.0.2                  
-##  [24] BiocManager_1.30.20                          
-##  [25] shinyjs_2.1.0                                
-##  [26] plotly_4.10.1                                
-##  [27] shinyBS_0.61.1                               
-##  [28] ComplexHeatmap_2.12.1                        
-##  [29] genefilter_1.78.0                            
-##  [30] msigdbr_7.5.1                                
-##  [31] DOSE_3.22.1                                  
-##  [32] enrichplot_1.16.2                            
-##  [33] clusterProfiler_4.4.4                        
-##  [34] ggnewscale_0.4.8                             
-##  [35] DESeq2_1.36.0                                
-##  [36] SummarizedExperiment_1.26.1                  
-##  [37] MatrixGenerics_1.8.1                         
-##  [38] matrixStats_0.63.0                           
-##  [39] cowplot_1.1.1                                
-##  [40] gridExtra_2.3                                
-##  [41] ggplotify_0.1.0                              
-##  [42] ggdendro_0.1.23                              
-##  [43] ggrepel_0.9.3                                
-##  [44] ggpubr_0.6.0                                 
-##  [45] lubridate_1.9.2                              
-##  [46] forcats_1.0.0                                
-##  [47] stringr_1.5.0                                
-##  [48] dplyr_1.1.2                                  
-##  [49] purrr_1.0.1                                  
-##  [50] readr_2.1.4                                  
-##  [51] tidyr_1.3.0                                  
-##  [52] tibble_3.2.1                                 
-##  [53] ggplot2_3.4.2                                
-##  [54] tidyverse_2.0.0                              
-##  [55] multcomp_1.4-23                              
-##  [56] TH.data_1.1-2                                
-##  [57] MASS_7.3-58.2                                
-##  [58] survival_3.5-3                               
-##  [59] mvtnorm_1.1-3                                
-##  [60] rstatix_0.7.2                                
-##  [61] gdata_2.19.0                                 
-##  [62] DT_0.27                                      
-##  [63] shiny_1.7.4                                  
-##  [64] biomaRt_2.52.0                               
-##  [65] org.Pt.eg.db_3.15.0                          
-##  [66] org.Mmu.eg.db_3.15.0                         
-##  [67] org.Gg.eg.db_3.15.0                          
-##  [68] org.Dr.eg.db_3.15.0                          
-##  [69] org.Cf.eg.db_3.15.0                          
-##  [70] org.Bt.eg.db_3.15.0                          
-##  [71] org.Xl.eg.db_3.15.0                          
-##  [72] org.Ce.eg.db_3.15.0                          
-##  [73] org.Dm.eg.db_3.15.0                          
-##  [74] org.Rn.eg.db_3.15.0                          
-##  [75] org.Mm.eg.db_3.15.0                          
-##  [76] org.Hs.eg.db_3.15.0                          
-##  [77] TxDb.Ptroglodytes.UCSC.panTro4.refGene_3.12.0
-##  [78] TxDb.Mmulatta.UCSC.rheMac8.refGene_3.12.0    
-##  [79] TxDb.Ggallus.UCSC.galGal4.refGene_3.12.0     
-##  [80] TxDb.Drerio.UCSC.danRer10.refGene_3.4.6      
-##  [81] TxDb.Cfamiliaris.UCSC.canFam3.refGene_3.11.0 
-##  [82] TxDb.Btaurus.UCSC.bosTau8.refGene_3.12.0     
-##  [83] TxDb.Celegans.UCSC.ce11.refGene_3.4.6        
-##  [84] TxDb.Rnorvegicus.UCSC.rn6.refGene_3.4.6      
-##  [85] TxDb.Dmelanogaster.UCSC.dm6.ensGene_3.12.0   
-##  [86] TxDb.Mmusculus.UCSC.mm10.knownGene_3.10.0    
-##  [87] TxDb.Hsapiens.UCSC.hg38.knownGene_3.15.0     
-##  [88] TxDb.Hsapiens.UCSC.hg19.knownGene_3.2.2      
-##  [89] GenomicFeatures_1.48.4                       
-##  [90] AnnotationDbi_1.58.0                         
-##  [91] Biobase_2.56.0                               
-##  [92] Rsamtools_2.12.0                             
-##  [93] Biostrings_2.64.1                            
-##  [94] XVector_0.36.0                               
-##  [95] Rsubread_2.10.5                              
-##  [96] rtracklayer_1.56.1                           
-##  [97] GenomicRanges_1.48.0                         
-##  [98] GenomeInfoDb_1.32.4                          
-##  [99] IRanges_2.30.1                               
-## [100] S4Vectors_0.34.0                             
-## [101] BiocGenerics_0.42.0                          
+##   [2] TxDb.Mmusculus.UCSC.mm39.refGene_3.12.0      
+##   [3] clue_0.3-64                                  
+##   [4] webshot_0.5.4                                
+##   [5] magick_2.7.4                                 
+##   [6] pdftools_3.3.3                               
+##   [7] EnrichedHeatmap_1.26.0                       
+##   [8] ggrastr_1.0.1                                
+##   [9] ggsci_3.0.0                                  
+##  [10] reshape2_1.4.4                               
+##  [11] venn_1.11                                    
+##  [12] RColorBrewer_1.1-3                           
+##  [13] ggcorrplot_0.1.4                             
+##  [14] colorspace_2.1-0                             
+##  [15] plotmics_7.0.1                               
+##  [16] marge_0.0.4.9999                             
+##  [17] ggseqlogo_0.1                                
+##  [18] limma_3.52.4                                 
+##  [19] FindIT2_1.2.3                                
+##  [20] rGREAT_1.28.0                                
+##  [21] ChIPpeakAnno_3.30.1                          
+##  [22] ChIPseeker_1.32.1                            
+##  [23] soGGi_1.10.4                                 
+##  [24] dorothea_1.8.0                               
+##  [25] clusterProfiler.dplyr_0.0.2                  
+##  [26] BiocManager_1.30.20                          
+##  [27] shinyjs_2.1.0                                
+##  [28] plotly_4.10.1                                
+##  [29] shinyBS_0.61.1                               
+##  [30] ComplexHeatmap_2.12.1                        
+##  [31] genefilter_1.78.0                            
+##  [32] msigdbr_7.5.1                                
+##  [33] DOSE_3.22.1                                  
+##  [34] enrichplot_1.16.2                            
+##  [35] clusterProfiler_4.4.4                        
+##  [36] ggnewscale_0.4.8                             
+##  [37] DESeq2_1.36.0                                
+##  [38] SummarizedExperiment_1.26.1                  
+##  [39] MatrixGenerics_1.8.1                         
+##  [40] matrixStats_0.63.0                           
+##  [41] cowplot_1.1.1                                
+##  [42] gridExtra_2.3                                
+##  [43] ggplotify_0.1.0                              
+##  [44] ggdendro_0.1.23                              
+##  [45] ggrepel_0.9.3                                
+##  [46] ggpubr_0.6.0                                 
+##  [47] lubridate_1.9.2                              
+##  [48] forcats_1.0.0                                
+##  [49] stringr_1.5.0                                
+##  [50] dplyr_1.1.2                                  
+##  [51] purrr_1.0.1                                  
+##  [52] readr_2.1.4                                  
+##  [53] tidyr_1.3.0                                  
+##  [54] tibble_3.2.1                                 
+##  [55] ggplot2_3.4.2                                
+##  [56] tidyverse_2.0.0                              
+##  [57] multcomp_1.4-23                              
+##  [58] TH.data_1.1-2                                
+##  [59] MASS_7.3-58.2                                
+##  [60] survival_3.5-3                               
+##  [61] mvtnorm_1.1-3                                
+##  [62] rstatix_0.7.2                                
+##  [63] gdata_2.19.0                                 
+##  [64] DT_0.27                                      
+##  [65] shiny_1.7.5.1                                
+##  [66] biomaRt_2.52.0                               
+##  [67] org.Pt.eg.db_3.15.0                          
+##  [68] org.Mmu.eg.db_3.15.0                         
+##  [69] org.Gg.eg.db_3.15.0                          
+##  [70] org.Dr.eg.db_3.15.0                          
+##  [71] org.Cf.eg.db_3.15.0                          
+##  [72] org.Bt.eg.db_3.15.0                          
+##  [73] org.Xl.eg.db_3.15.0                          
+##  [74] org.Ce.eg.db_3.15.0                          
+##  [75] org.Dm.eg.db_3.15.0                          
+##  [76] org.Rn.eg.db_3.15.0                          
+##  [77] org.Mm.eg.db_3.15.0                          
+##  [78] org.Hs.eg.db_3.15.0                          
+##  [79] TxDb.Ptroglodytes.UCSC.panTro4.refGene_3.12.0
+##  [80] TxDb.Mmulatta.UCSC.rheMac8.refGene_3.12.0    
+##  [81] TxDb.Ggallus.UCSC.galGal4.refGene_3.12.0     
+##  [82] TxDb.Drerio.UCSC.danRer10.refGene_3.4.6      
+##  [83] TxDb.Cfamiliaris.UCSC.canFam3.refGene_3.11.0 
+##  [84] TxDb.Btaurus.UCSC.bosTau8.refGene_3.12.0     
+##  [85] TxDb.Celegans.UCSC.ce11.refGene_3.4.6        
+##  [86] TxDb.Rnorvegicus.UCSC.rn6.refGene_3.4.6      
+##  [87] TxDb.Dmelanogaster.UCSC.dm6.ensGene_3.12.0   
+##  [88] TxDb.Mmusculus.UCSC.mm10.knownGene_3.10.0    
+##  [89] TxDb.Hsapiens.UCSC.hg38.knownGene_3.15.0     
+##  [90] TxDb.Hsapiens.UCSC.hg19.knownGene_3.2.2      
+##  [91] GenomicFeatures_1.48.4                       
+##  [92] AnnotationDbi_1.58.0                         
+##  [93] Biobase_2.56.0                               
+##  [94] Rsamtools_2.12.0                             
+##  [95] Biostrings_2.64.1                            
+##  [96] XVector_0.36.0                               
+##  [97] Rsubread_2.10.5                              
+##  [98] rtracklayer_1.56.1                           
+##  [99] GenomicRanges_1.48.0                         
+## [100] GenomeInfoDb_1.32.4                          
+## [101] IRanges_2.30.1                               
+## [102] S4Vectors_0.34.0                             
+## [103] BiocGenerics_0.42.0                          
 ## 
 ## loaded via a namespace (and not attached):
 ##   [1] Hmisc_5.0-1              glmnet_4.1-7             foreach_1.5.2           
@@ -1755,54 +1872,54 @@ You may contact the author of this code, Kan Etoh, at &lt;kaneto@kumamoto-u.ac.j
 ##  [28] RVenn_1.1.0              hwriter_1.3.2.1          rstudioapi_0.14         
 ##  [31] rpart_4.1.19             bslib_0.4.2              fastmatch_1.1-3         
 ##  [34] ensembldb_2.20.2         lambda.r_1.2.4           treeio_1.20.2           
-##  [37] xfun_0.39                askpass_1.1              clue_0.3-64             
-##  [40] multtest_2.52.0          cluster_2.1.4            caTools_1.18.2          
-##  [43] tidygraph_1.2.3          KEGGREST_1.36.3          biovizBase_1.44.0       
-##  [46] ape_5.7-1                png_0.1-8                withr_2.5.0             
-##  [49] bitops_1.0-7             ggforce_0.4.1            RBGL_1.72.0             
-##  [52] plyr_1.8.8               AnnotationFilter_1.20.0  pillar_1.9.0            
-##  [55] gplots_3.1.3             GlobalOptions_0.1.2      cachem_1.0.7            
-##  [58] GetoptLong_1.0.5         vctrs_0.6.2              ellipsis_0.3.2          
-##  [61] generics_0.1.3           qpdf_1.3.2               foreign_0.8-84          
-##  [64] beeswarm_0.4.0           munsell_0.5.0            tweenr_2.0.2            
-##  [67] fgsea_1.22.0             DelayedArray_0.22.0      fastmap_1.1.1           
-##  [70] compiler_4.2.3           abind_1.4-5              httpuv_1.6.9            
-##  [73] GenomeInfoDbData_1.2.8   InteractionSet_1.24.0    lattice_0.20-45         
-##  [76] deldir_1.0-6             utf8_1.2.3               later_1.3.0             
-##  [79] BiocFileCache_2.4.0      jsonlite_1.8.4           scales_1.2.1            
-##  [82] graph_1.74.0             tidytree_0.4.2           carData_3.0-5           
-##  [85] lazyeval_0.2.2           promises_1.2.0.1         car_3.1-2               
-##  [88] doParallel_1.0.17        latticeExtra_0.6-30      checkmate_2.1.0         
-##  [91] rmarkdown_2.21           sandwich_3.0-2           ggVennDiagram_1.2.2     
-##  [94] dichromat_2.0-0.1        downloader_0.4           BSgenome_1.64.0         
-##  [97] igraph_1.4.2             yaml_2.3.7               plotrix_3.8-2           
-## [100] htmltools_0.5.5          memoise_2.0.1            VariantAnnotation_1.42.1
-## [103] BiocIO_1.6.0             locfit_1.5-9.7           graphlayouts_0.8.4      
-## [106] viridisLite_0.4.1        digest_0.6.31            mime_0.12               
-## [109] rappdirs_0.3.3           futile.options_1.0.1     RSQLite_2.3.1           
-## [112] yulab.utils_0.0.6        VennDiagram_1.7.3        data.table_1.14.8       
-## [115] blob_1.2.4               futile.logger_1.4.3      preprocessCore_1.58.0   
-## [118] Formula_1.2-5            splines_4.2.3            ProtGenerics_1.28.0     
-## [121] RCurl_1.98-1.12          broom_1.0.4              hms_1.1.3               
-## [124] base64enc_0.1-3          ggbeeswarm_0.7.1         shape_1.4.6             
-## [127] aplot_0.1.10             nnet_7.3-18              sass_0.4.5              
-## [130] Rcpp_1.0.10              circlize_0.4.15          fansi_1.0.4             
-## [133] tzdb_0.3.0               R6_2.5.1                 lifecycle_1.0.3         
-## [136] formatR_1.14             ShortRead_1.54.0         curl_5.0.0              
-## [139] ggsignif_0.6.4           jquerylib_0.1.4          DO.db_2.9               
-## [142] Matrix_1.5-3             qvalue_2.28.0            iterators_1.0.14        
-## [145] htmlwidgets_1.6.2        polyclip_1.10-4          shadowtext_0.1.2        
-## [148] timechange_0.2.0         gridGraphics_0.5-1       htmlTable_2.4.1         
-## [151] patchwork_1.1.2          codetools_0.2-19         GO.db_3.15.0            
-## [154] gtools_3.9.4             prettyunits_1.1.1        dbplyr_2.3.2            
-## [157] gtable_0.3.3             DBI_1.1.3                ggfun_0.0.9             
-## [160] httr_1.4.5               KernSmooth_2.23-20       stringi_1.7.12          
-## [163] progress_1.2.2           farver_2.1.1             annotate_1.74.0         
-## [166] viridis_0.6.2            ggtree_3.4.4             xml2_1.3.3              
-## [169] admisc_0.31              boot_1.3-28.1            restfulr_0.0.15         
-## [172] interp_1.1-4             geneplotter_1.74.0       bit_4.0.5               
-## [175] scatterpie_0.1.9         jpeg_0.1-10              ggraph_2.1.0            
-## [178] pkgconfig_2.0.3          babelgene_22.9           knitr_1.43</code></pre>
+##  [37] xfun_0.39                askpass_1.1              multtest_2.52.0         
+##  [40] cluster_2.1.4            caTools_1.18.2           tidygraph_1.2.3         
+##  [43] KEGGREST_1.36.3          biovizBase_1.44.0        ape_5.7-1               
+##  [46] png_0.1-8                withr_2.5.0              bitops_1.0-7            
+##  [49] ggforce_0.4.1            RBGL_1.72.0              plyr_1.8.8              
+##  [52] AnnotationFilter_1.20.0  pillar_1.9.0             gplots_3.1.3            
+##  [55] GlobalOptions_0.1.2      cachem_1.0.7             GetoptLong_1.0.5        
+##  [58] vctrs_0.6.2              ellipsis_0.3.2           generics_0.1.3          
+##  [61] qpdf_1.3.2               foreign_0.8-84           beeswarm_0.4.0          
+##  [64] munsell_0.5.0            tweenr_2.0.2             fgsea_1.22.0            
+##  [67] DelayedArray_0.22.0      fastmap_1.1.1            compiler_4.2.3          
+##  [70] abind_1.4-5              httpuv_1.6.9             GenomeInfoDbData_1.2.8  
+##  [73] InteractionSet_1.24.0    lattice_0.20-45          deldir_1.0-6            
+##  [76] utf8_1.2.3               later_1.3.0              BiocFileCache_2.4.0     
+##  [79] jsonlite_1.8.4           scales_1.2.1             graph_1.74.0            
+##  [82] tidytree_0.4.2           carData_3.0-5            lazyeval_0.2.2          
+##  [85] promises_1.2.0.1         car_3.1-2                doParallel_1.0.17       
+##  [88] latticeExtra_0.6-30      checkmate_2.1.0          rmarkdown_2.21          
+##  [91] sandwich_3.0-2           ggVennDiagram_1.2.2      dichromat_2.0-0.1       
+##  [94] downloader_0.4           BSgenome_1.64.0          igraph_1.4.2            
+##  [97] yaml_2.3.7               plotrix_3.8-2            htmltools_0.5.5         
+## [100] memoise_2.0.1            VariantAnnotation_1.42.1 BiocIO_1.6.0            
+## [103] locfit_1.5-9.7           graphlayouts_0.8.4       viridisLite_0.4.1       
+## [106] digest_0.6.31            mime_0.12                rappdirs_0.3.3          
+## [109] futile.options_1.0.1     RSQLite_2.3.1            yulab.utils_0.0.6       
+## [112] VennDiagram_1.7.3        data.table_1.14.8        blob_1.2.4              
+## [115] futile.logger_1.4.3      preprocessCore_1.58.0    Formula_1.2-5           
+## [118] splines_4.2.3            ProtGenerics_1.28.0      RCurl_1.98-1.12         
+## [121] broom_1.0.4              hms_1.1.3                base64enc_0.1-3         
+## [124] ggbeeswarm_0.7.1         shape_1.4.6              aplot_0.1.10            
+## [127] nnet_7.3-18              sass_0.4.5               Rcpp_1.0.10             
+## [130] circlize_0.4.16          fansi_1.0.4              tzdb_0.3.0              
+## [133] R6_2.5.1                 lifecycle_1.0.3          formatR_1.14            
+## [136] ShortRead_1.54.0         curl_5.0.0               ggsignif_0.6.4          
+## [139] jquerylib_0.1.4          DO.db_2.9                Matrix_1.5-3            
+## [142] qvalue_2.28.0            iterators_1.0.14         htmlwidgets_1.6.2       
+## [145] polyclip_1.10-4          shadowtext_0.1.2         timechange_0.2.0        
+## [148] gridGraphics_0.5-1       htmlTable_2.4.1          patchwork_1.1.2         
+## [151] codetools_0.2-19         GO.db_3.15.0             gtools_3.9.4            
+## [154] prettyunits_1.1.1        dbplyr_2.3.2             gtable_0.3.3            
+## [157] DBI_1.1.3                ggfun_0.0.9              httr_1.4.5              
+## [160] KernSmooth_2.23-20       stringi_1.7.12           progress_1.2.2          
+## [163] farver_2.1.1             annotate_1.74.0          viridis_0.6.2           
+## [166] ggtree_3.4.4             xml2_1.3.3               admisc_0.31             
+## [169] boot_1.3-28.1            restfulr_0.0.15          interp_1.1-4            
+## [172] geneplotter_1.74.0       bit_4.0.5                scatterpie_0.1.9        
+## [175] jpeg_0.1-10              ggraph_2.1.0             pkgconfig_2.0.3         
+## [178] babelgene_22.9           knitr_1.43</code></pre>
 </div>
 
 

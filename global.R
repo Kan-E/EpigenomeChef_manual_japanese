@@ -76,12 +76,14 @@ library(EnrichedHeatmap)
 library(pdftools)
 library(magick)
 library(webshot)
+library(clue)
+library(TxDb.Mmusculus.UCSC.mm39.refGene)
 Sys.setenv(OPENSSL_CONF="/dev/null")
 options('homer_path' = "/usr/local/homer")
 check_homer()
 jscode <- "shinyjs.closeWindow = function() { window.close(); }"
 options(rsconnect.max.bundle.size=31457280000000000000)
-species_list <- c("not selected", "Homo sapiens (hg19)","Homo sapiens (hg38)","Mus musculus (mm10)",
+species_list <- c("not selected", "Homo sapiens (hg19)","Homo sapiens (hg38)","Mus musculus (mm10)","Mus musculus (mm39)",
                   "Rattus norvegicus (rn6)","Drosophila melanogaster (dm6)","Caenorhabditis elegans (ce11)",
                   "Bos taurus (bosTau8)","Canis lupus familiaris (canFam3)","Danio rerio (danRer10)",
                   "Gallus gallus (galGal4)","Macaca mulatta (rheMac8)","Pan troglodytes (panTro4)")
@@ -100,6 +102,7 @@ org <- function(Species){
             "Homo sapiens (hg38)" = org <- org.Hs.eg.db,
             "Homo sapiens (hg19)" = org <- org.Hs.eg.db,
             "Mus musculus (mm10)" = org <- org.Mm.eg.db,
+            "Mus musculus (mm39)" = org <- org.Mm.eg.db,
             "Drosophila melanogaster (dm6)" = org <- org.Dm.eg.db,
             "Rattus norvegicus (rn6)" = org <- org.Rn.eg.db,
             "Caenorhabditis elegans (ce11)" = org <- org.Ce.eg.db,
@@ -163,6 +166,7 @@ txdb_function <- function(Species){
           "Mus musculus (mm10)" = txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene,
           "Homo sapiens (hg19)" = txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene,
           "Homo sapiens (hg38)" = txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene,
+          "Mus musculus (mm39)" = txdb <- TxDb.Mmusculus.UCSC.mm39.refGene,
           "Drosophila melanogaster (dm6)" = txdb <- TxDb.Dmelanogaster.UCSC.dm6.ensGene,
           "Rattus norvegicus (rn6)" = txdb <- TxDb.Rnorvegicus.UCSC.rn6.refGene,
           "Caenorhabditis elegans (ce11)" = txdb <- TxDb.Celegans.UCSC.ce11.refGene,
@@ -188,13 +192,15 @@ files_name2ENTREZID <- function(files,Species,gene_type){
       if(gene_type[name] != "SYMBOL"){
         if(str_detect(rownames(count)[1], "FBgn")){
           count$ENTREZID <- rownames(count)
-          count2 <- count
+          count2 <- count %>% dplyr::select(ENTREZID, everything())
         }else{
         my.symbols <- gsub("\\..*","", rownames(count))
         gene_id <-id_convert(my.symbols,Species = Species,type = "ENSEMBL2ENTREZID")
         gene_id <- gene_id %>% distinct(ENSEMBL, .keep_all = T) %>% na.omit()
         gene_id <- data.frame(ENTREZID = gene_id$ENTREZID, row.names = gene_id$ENSEMBL)
         count2 <- merge(gene_id,count,by=0)
+        count2 <- count2[,-1]
+        count2 <- count2 %>% distinct(ENTREZID, .keep_all = T)
         }
       }else{
         #symbol
@@ -207,25 +213,43 @@ files_name2ENTREZID <- function(files,Species,gene_type){
   return(df2)
   }
 }
-promoter <- function(txdb, upstream, downstream,input_type = "Promoter",files = NULL, bam=F,RPM){
+filter_function <- function(filter, files){
+  if(filter == "Reproducible_peaks"){
+    name_list <- names(files) %>% sort()
+    files <- files[name_list]
+    unique_col <- unique(gsub("\\_.+$", "", name_list))
+    total <- 0
+    consensus <- list()
+    for(i in 1:length(unique_col)){
+      cond <- length(which(gsub("\\_.+$", "", name_list) == unique_col[i]))
+      files2 <- files[(1 + total):(total + cond)]
+      if(cond == 1) files2 <- list(files2[[1]],files2[[1]])
+        consensusToCount <- soGGi:::runConsensusRegions(GRangesList(files2), "none")
+        occurrences <- elementMetadata(consensusToCount) %>% as.data.frame %>% dplyr::select(-consensusIDs) %>% 
+          rowSums
+        consensusToCount <- consensusToCount[occurrences >= 2, ]
+        consensus[[i]] <- consensusToCount
+      total <- total + cond
+    }
+    consensusToCount <- soGGi:::runConsensusRegions(GRangesList(consensus), "none")
+  }else{
+    if(length(names(files)) == 1) files <- list(files[[1]],files[[1]])
+      consensusToCount <- soGGi:::runConsensusRegions(GRangesList(files), "none")
+  }
+  return(consensusToCount)
+}
+promoter <- function(txdb, upstream, downstream,input_type = "Promoter",files = NULL, bam=F,RPM,filter="Reproducible_peaks"){
   if(input_type == "Promoter"){
   return(promoters(genes(txdb),upstream = upstream, downstream = downstream))
   }else{
-    consensusToCount <- soGGi:::runConsensusRegions(GRangesList(files), "none")
-    occurrences <- elementMetadata(consensusToCount) %>% as.data.frame %>% dplyr::select(-consensusIDs) %>% 
-      rowSums
-    consensusToCount <- consensusToCount[occurrences >= 2, ]
-    return(consensusToCount)
+   return(filter_function(files = files,filter=filter))
   }
 }
-promoter_clustering <- function(txdb, upstream, downstream,input_type = "Promoter",files = NULL, bam=F,RPM){
+promoter_clustering <- function(txdb, upstream, downstream,input_type = "Promoter",files = NULL, bam=F,RPM, filter="Reproducible_peaks"){
   if(input_type == "Promoter"){
     return(promoters(genes(txdb),upstream = upstream, downstream = downstream))
   }else{
-    if(length(names(files)) > 1){
-    consensusToCount <- soGGi:::runConsensusRegions(GRangesList(files), "none")
-    }else consensusToCount <- files[[1]]
-    return(consensusToCount)
+    return(filter_function(files = files,filter=filter))
   }
 }
 
@@ -546,7 +570,7 @@ gene_list_for_enrichment_genome <- function(H_t2g, Species=NULL){
   return(df)
 }
 dorothea <- function(species, confidence = "recommend",type){
-  if(species == "Mus musculus (mm10)"){
+  if(species == "Mus musculus (mm10)" || species == "Mus musculus (mm39)"){
     net <- dorothea::dorothea_mm
   }else{
     net <- dorothea::dorothea_hs
@@ -566,7 +590,7 @@ dorothea <- function(species, confidence = "recommend",type){
   net2 <- merge(net2, gene_IDs, by="target")
   net3 <- data.frame(gs_name = net2$tf, entrez_gene = net2$ENTREZID, target = net2$target, confidence = net2$confidence)
   net3 <- dplyr::arrange(net3, gs_name)
-  if(species != "Mus musculus (mm10)" && species != "Homo sapiens (hg19)" && 
+  if(species != "Mus musculus (mm10)"  && species != "Mus musculus (mm39)" && species != "Homo sapiens (hg19)" && 
      species != "Homo sapiens (hg38)"){
     withProgress(message = paste0("Gene ID conversion from human to ", species, "for the regulon gene set. It takes a few minutes."),{
       genes <- net3$entrez_gene
@@ -1203,6 +1227,7 @@ RNAseqDEG_ann <- function(RNAdata,Species,gene_type){
   if(str_detect(rownames(RNAdata)[1], "FBgn")){
     RNAdata$gene_id <- rownames(RNAdata)
     data <- RNAdata
+    data <- merge(RNAdata, gene_IDs, by="Symbol")
   }else{
   if(gene_type != "SYMBOL"){
     my.symbols <- gsub("\\..*","", rownames(RNAdata))
@@ -1210,14 +1235,15 @@ RNAseqDEG_ann <- function(RNAdata,Species,gene_type){
     colnames(gene_IDs) <- c("EnsemblID","Symbol","gene_id")
     RNAdata$EnsemblID <- gsub("\\..*","", rownames(RNAdata))
     gene_IDs <- gene_IDs %>% distinct(EnsemblID, .keep_all = T)
+    data <- merge(RNAdata, gene_IDs, by="EnsemblID")
   }else{
     my.symbols <- rownames(RNAdata)
     gene_IDs<-id_convert(my.symbols, Species,type="SYMBOL_single")
     colnames(gene_IDs) <- c("Symbol", "gene_id")
     gene_IDs <- gene_IDs %>% distinct(Symbol, .keep_all = T)
     RNAdata$Symbol <- rownames(RNAdata) 
+    data <- merge(RNAdata, gene_IDs, by="Symbol")
   }
-  data <- merge(RNAdata, gene_IDs, by="Symbol")
   }
   return(data)
 }
@@ -1345,6 +1371,7 @@ ref_for_GREAT <- function(Species){
           "Mus musculus (mm10)" = source <- "TxDb.Mmusculus.UCSC.mm10.knownGene",
           "Homo sapiens (hg19)" = source <- "TxDb.Hsapiens.UCSC.hg19.knownGene",
           "Homo sapiens (hg38)" = source <- "TxDb.Hsapiens.UCSC.hg38.knownGene",
+          "Mus musculus (mm39)" = source <- "TxDb.Mmusculus.UCSC.mm39.refGene",
           "Drosophila melanogaster (dm6)" = source <- "TxDb.Dmelanogaster.UCSC.dm6.ensGene",
           "Rattus norvegicus (rn6)" = source <- "TxDb.Rnorvegicus.UCSC.rn6.refGene",
           "Caenorhabditis elegans (ce11)" = source <- "TxDb.Celegans.UCSC.ce11.refGene",
@@ -1552,7 +1579,7 @@ batch_heatmap <- function(files2,files_bw,maxrange=NULL,type=NULL,
     name <- gsub(" ", "\\_", name)
     ht <- EnrichedHeatmap(mat1, split = num_list, col = color,name=name,
                           axis_name = axis_name,pos_line = F,
-                          column_title =name,
+                          column_title =name,use_raster=TRUE,
                           top_annotation = HeatmapAnnotation(enriched = anno_enriched(gp = gpar(col = 1:4, lty = 1),
                                                                                       axis_param = list(side = "right", facing = "inside"))))
     ht_list <- ht_list + ht
@@ -1592,4 +1619,12 @@ gene_type <- function(my.symbols,org,Species){
       }
   }else type <- "not selected"
   return(type)
+}
+consensus_kmeans = function(mat, centers, km_repeats) {
+  partition_list = lapply(seq_len(km_repeats), function(i) {
+    as.cl_hard_partition(kmeans(mat, centers))
+  })
+  partition_list = cl_ensemble(list = partition_list)
+  partition_consensus = cl_consensus(partition_list)
+  as.vector(cl_class_ids(partition_consensus)) 
 }

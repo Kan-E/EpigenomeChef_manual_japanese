@@ -9,6 +9,7 @@ library(Gviz)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
 # 概要
 
 ![](manual_figure/graphical_abstract2.png){#id .class width=100%} <br><br>
@@ -17,38 +18,53 @@ EpigenomeChefは、ChIP-seqやATAC-seqにより得たカバレッジデータ(.B
 単一のデータセットの解析だけでなく、複数のデータセットの結果を統合解析(エピゲノムデータの統合解析)することも可能です。<br>
 ChIP-seq, ATAC-seq, Bisulfite-seqのデータベースである**ChIP-atlas**からダウンロードしたデータをそのまま使用することができます(事前にファイル名を変更する必要があります。詳細はInput fileの共通ルール・注意点)。
 また、RNA-seqデータから得た遺伝子発現変動(DEG)解析結果を同時にアップロードすることで、トランスクリプトーム解析との統合解析も可能です。<br><br>
+
+## ウェブバージョン (チュートリアル用)
+[https://imeg-ku.shinyapps.io/EpigenomeChef_web/](https://imeg-ku.shinyapps.io/EpigenomeChef_web/).<br>
+EpigenomeChef_webは上記のURLにアクセスするだけ使用することができるウェブアプリケーションです。<br>
+計算は全てウェブサーバー([Shinyapps.io](https://www.shinyapps.io/))上で実行されます。<br>
+このバージョンはウェブサーバーのメモリの都合上、以下の制限があるため、本格的に解析される方はDockerバージョンの使用を推奨します。<br>
+ - 同時アクセス可能数
+ - HOMERを用いたモチーフ解析が使用不可
+ - Heatmap (1万を超えるピーク領域の解析はサーバーダウンする可能性があります)
+
+その一方で、以下のbedファイルを用いた解析に関してはウェブバージョンでも安定的に利用可能です。
+ - ベン図解析
+ - GREATによるエンリッチメント解析
+ - アノテーション解析
+ - Regulatory potentialを用いたRNA-seqとの統合解析
+
+## Dockerバージョン
+#### 方法１
 EpigenomeChefは、Docker imageをインストールすることで使用可能です。<br>
-**0.（Docker環境がない場合）Dockerのインストール**<br>
-インストール方法は以下のページが詳しいです。<br>
-Windows:[https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html](https://sukkiri.jp/technologies/virtualizers/docker/docker-win_install.html)<br>
-Mac:[https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/](https://matsuand.github.io/docs.docker.jp.onthefly/desktop/mac/install/)<br><br>
+### 0.（Docker環境がない場合）Dockerのインストール
 
-**1. EpigenomeChefのインストール**（一度実行すれば以後必要ありません） <br> 
-注意点：HOMERはリファレンスゲノムのファイルサイズが大きいため、リファレンス毎にdocker imageを分割しています。解析したいデータセットの種に対応するdocker imageをインストールしてください。<br>
-HOMER human (hg19)対応 (required storage size: 18Gb)
+### 1. EpigenomeChefのインストール（一度実行すれば以後必要ありません）
+
+コマンドプロンプト(windows)またはターミナル(Mac, Linux)で以下のコマンドを入力します。
 ```
-docker pull omicschef/epigenomechef:hg19v1.0.5-beta
+docker pull omicschef/epigenomechef:v1.1.2
 ```
 
-HOMER mouse (mm10)対応 (required storage size: 17Gb)
-```
-docker pull omicschef/epigenomechef:mm10v1.0.5-beta
-```
+### 2. コンテナの作製・立ち上げ
+EpigenomeChefのコンテナを作製・立ち上げます。<br>
+コンテナを立ち上げる方法はコマンドを使う方法とコマンドを使わないDocker Desktopを操作する方法があります。<br>
 
+#### 方法１:コマンドの入力
+```
+docker run --rm -p 3838:3838 omicschef/epigenomechef:v1.1.2
 
-**2. コンテナの作成**（実行コマンドの入力）<br>
-HOMER human (hg19)対応 
+## オプション: バインドマウント
+## BigWigファイルを含むフォルダをコンテナにバインドすることができます。アップロードしたいファイル容量が大きい場合、バインドマウントを使用することでアップロード時間をスキップすることができます。
+## docker run --rm -p 3838:3838  -v ${path/to/directory}:/srv/shiny-server/EpigenomeChef/Volume omicschef/epigenomechef:v1.1.0
+## 例:カレントディレクトリをバインドマウントしたい場合は以下のコマンドを実行します。
+docker run --rm -p 3838:3838  -v ${PWD}:/srv/shiny-server/EpigenomeChef/Volume omicschef/epigenomechef:v1.1.0
 ```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:hg19v1.0.5-beta
-```
-HOMER mouse (mm10)対応 
-```
-docker run --rm -p 3838:3838 omicschef/epigenomechef:mm10v1.0.5-beta
-```
-
-
 **ブラウザで[http://localhost:3838](http://localhost:3838)を立ち上げる**。<br>
 解析終了後はコンテナを削除してください。<br>
+
+##### 方法２:Docker Desktopの操作
+![panel](manual_figure/docker.png){#id .class width=100%} <br><br>
 
 If you need help, please create an issue on [Github](https://github.com/Kan-E/EpigenomeChef/issues) or [contact us](mailto:kaneto@kumamoto-u.ac.jp){.email}. <br>
 
@@ -61,7 +77,7 @@ If you need help, please create an issue on [Github](https://github.com/Kan-E/Ep
 
 - **Clustering** (クラスタリング解析、k-means clusteringを用いたゲノム領域の分類・解析)
 
-- **Enrichment viewer** (ゲノム領域の機能解析・モチーフ解析)
+- **Peaks of interest** (ゲノム領域の機能解析・モチーフ解析)
 
 - **More**（その他の便利機能やReferenceなど）
 
@@ -77,13 +93,24 @@ If you need help, please create an issue on [Github](https://github.com/Kan-E/Ep
 
 #### 拡張子
 
-カバレッジデータはBigWig file (.BigWig or .bw)、またはBam file (.bam)が利用可能です。
-ピークコールデータはnarrowPeak file (.narrowPeak)、またはbed file (.bed)が利用可能です。
-RNA-seq DEG result fileはタブ区切りtxt file (.txt)、カンマ区切りcsv file (.csv)、エクセルファイル (.xlsx)が利用可能です。<br><br>
+カバレッジデータ:
+
+- BigWig file (.BigWig or .bw)
+- Bam file (.bam) (option for "Pair-wise" section)
+
+ピークコールデータ:
+
+- narrowPeak file (.narrowPeak)
+- bed file (.bed)
+
+RNA-seqデータ:
+- タブ区切りtxt file (.txt)
+- カンマ区切りcsv file (.csv)
+- エクセルファイル (.xlsx)
 
 #### BigWig fileの形式
 
-NormalizeされたBigWig file (例: Reads per million (RPM))を使用してください。
+NormalizeされたBigWig file (例: Reads per million (RPM, CPM))を使用してください。
 
 #### BigWig fileおよびBam fileのファイル名
 
@@ -95,11 +122,11 @@ NormalizeされたBigWig file (例: Reads per million (RPM))を使用してく�
 
 #### Peak call fileおよびBed fileのファイル名
 
-- **Pair-wise DAR、Clustering**<br>
+- **Pair-wise、Clustering**<br>
 サンプル名のn数（replicate number）は、アンダーバー「 _ 」を用いて表記してください。<br>
 アンダーバー「 _ 」は、n数の表記以外では使用できません。<br>
 
-- **Venn diagram、Enrichment viewer、Bedtools**<br>
+- **Venn diagram、Peaks of interest、Bedtools**<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br>
 
@@ -126,9 +153,9 @@ Setting panelの「Output plot size setting for pdf」を調整することで�
 
 ---
 
-# Pair-wise DAR
+# Pair-wise
 
-２群間の比較解析を実行します。DAR（Differential accessible region）の同定・可視化・機能解析結果を出力します。
+２群間の比較解析を実行します。変化したピーク領域の同定・可視化・機能解析結果を出力します。
 
 ## Setting
 
@@ -153,7 +180,7 @@ Sequence情報（single-end or paired-end）が必要となります。<br>
 二群間の統計解析はDESeq2を実行します。<br>
 各サンプルのリード数が揃っている場合は、BigWig fileを用いた解析より精度の高い結果が得られます。しかし、各サンプルのリード数が大きく異なる場合は、解析に大きな誤差が生じることがあります。<br>
 - **Count file + BigWig fileを選ぶ場合**<br>
-過去にPair-wise DARによる解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
+過去に"Pair-wise"による解析を実行し、カウントファイルを得ている場合のみ使用できます。<br>
 このモードを用いることで、BigWigファイルからカウントデータを抽出するステップを省略することができます。<br>
 **Type**:カウントファイルを作成した条件によって変更してください。BigWigファイルをインプットとした場合は**Normalized count**、Bamファイルをインプットとした場合は**Raw count**を選択してください。
 **Genomic region**や**Filter**は過去の解析の条件と合わせてください。
@@ -217,11 +244,16 @@ BigWigファイルの順番を並び替えることができます。<br>
 Principal Component Analysis (PCA)、Multi-Dimensional Scaling (MDS), ward.D2による階層的クラスタリングの3種類のクラスタリング解析を実行します。
 <br><br>
 ![](manual_figure/pair-wise pca.png){#id .class width=90%}<br><br>
-DAR解析の結果をvolcano plotとheatmapで表示します。<br>
-**DAR resultテーブル**の項目をクリックすると、volcano plotで表示される点のうち、選択した領域だけを緑色で表示します。<br>
+解析結果をvolcano plotとheatmapで表示します。<br>
+**Resultテーブル**の項目をクリックすると、volcano plotで表示される点のうち、選択した領域だけを緑色で表示します。<br>
+
+#### Regression
+回帰分析の方法を選択できます。<br>
+**least squares**: 最小二乗法を適用します。<br>
+**robust**: ロバスト会期を適用します。外れ値の影響を低減します。<br>
 
 #### Trackplotパネル
-**DAR resultテーブル**の項目をクリックすると、選択した領域及びその近傍遺伝子のトラックプロットを表示します。<br>
+**Resultテーブル**の項目をクリックすると、選択した領域及びその近傍遺伝子のトラックプロットを表示します。<br>
 トラックプロットのハイライト（赤）は、選択した領域を示しています。<br>
 トラックプロットのピークの高さは、**peak range**で変更可能です。<br>
 トラックプロットに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。
@@ -230,16 +262,17 @@ volcanoプロット中の興味あるゲノム領域を囲うことで、その�
 ![](manual_figure/pair-wise overview2.png){#id .class width=90%}<br><br>
 
 
-#### Up_peaks及びDown_peaksパネル
-表データとして、DAR (bed file)が出力されます。<br>
-ダウンロードしたbed fileは**Venn diagram**や**Clustering**、**Enrichment viewer**セクションにそのままアップロード・再解析が可能です。<br><br>
+#### Red_peaks及びBlue_peaksパネル
+表データとして、bed fileが出力されます。<br>
+Red_peaksはvolcano plotにおいて赤点で示される領域、Blue_peaksは青点で示される領域です。
+ダウンロードしたbed fileは**Venn diagram**や**Clustering**、**Peaks of interest**セクションにそのままアップロード・再解析が可能です。<br><br>
 <br><br>
 
 ---
 
-### Peak distribution
+### Annotation
 
-Up及びDownしたDARのannotation情報を円グラフとして出力します。<br>
+変化したピーク領域のannotation情報を円グラフとして出力します。<br>
 円グラフは次の3種類のレベルで表示されます。<br>
 
 - **Gene Level**<br>
@@ -256,7 +289,7 @@ Exon, Intron, Intergenic<br>
 
 ### Peak pattern
 
-Peak heatmap (Peakの頂点を中心にDARを並べたheatmapで表示)とline plot (各サンプルのDARにおけるピークの平均値をline plotで表示)を出力します。<br>
+Peak heatmap (Peakの頂点を中心に変化したピーク領域を並べたheatmapで表示)とline plot (各サンプルの変化したピーク領域におけるピークの平均値をline plotで表示)を出力します。<br>
 追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br><br>
 ![](manual_figure/pair-wise pattern.png){#id .class width=90%}<br><br>
 
@@ -264,7 +297,7 @@ Peak heatmap (Peakの頂点を中心にDARを並べたheatmapで表示)とline p
 
 ### GREAT
 
-GREAT (Genomic Regions Enrichment of Annotations Tool)をベースとしたエンリッチメント解析によりDARの機能を同定します。<br>
+GREAT (Genomic Regions Enrichment of Annotations Tool)をベースとしたエンリッチメント解析により変化したピーク領域の機能を同定します。<br>
 解析に使用できる遺伝子セットは、以下の通りです。<br>
 [MSigDB hallmark gene](http://www.gsea-msigdb.org/gsea/msigdb/genesets.jsp?collection=H) <br>
 [KEGG](https://www.kegg.jp) <br>
@@ -287,7 +320,7 @@ GREAT (Genomic Regions Enrichment of Annotations Tool)をベースとしたエ�
 
 ### HOMER
 
-HOMER (Hypergeometric Optimization of Motif EnRichment)をベースとしたエンリッチメント解析により、DARに含まれるDNA結合モチーフを同定します。<br>
+HOMER (Hypergeometric Optimization of Motif EnRichment)をベースとしたエンリッチメント解析により、変化したピーク領域に含まれるDNA結合モチーフを同定します。<br>
 
 #### Type of enrichment analysis
 "known motif": known motifのみ解析します。<br>
@@ -299,7 +332,7 @@ HOMER (Hypergeometric Optimization of Motif EnRichment)をベースとしたエ�
 
 #### Background sequence
 "ramdom":ゲノム領域からランダムにbackground sequenceを抽出します。<br>
-"peak calling files":解析対象を除いたピーク領域をbackgroundとして利用します（例：up DARを解析する際はNS regionとdown DARをbackgroundとして利用）。randomと比べてよりspecificなmotifが予測できる可能性があります。
+"peak calling files":解析対象を除いたピーク領域をbackgroundとして利用します（例：up regionを解析する際はNS regionとdown regionをbackgroundとして利用）。randomと比べてよりspecificなmotifが予測できる可能性があります。
 
 #### Download homer report
 HOMERの実行結果がzip形式で一括downloadできます。<br><br>
@@ -307,8 +340,30 @@ HOMERの実行結果がzip形式で一括downloadできます。<br><br>
 
 ---
 
+### Combined Heatmap
+
+変化したピーク領域のエピゲノム情報（ChIP-seqやATAC-seqのPeakパターン）とそれに対応する遺伝子発現情報（RNAseqのカウントデータやFoldChange）をHeatmapで可視化します。<br>
+STARTボタンを押すと、解析を実行します。<br><br>
+![](manual_figure/pair-wise comb.png){#id .class width=90%}<br><br>
+---
+
 ### with RNAseq
-RNA-seqのDEG result fileをアップロードすることで、DAR(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
+RNA-seqのデータをアップロードすることで、トランスクリプトームとの統合解析ができます。<br>
+RNA-seqのデータは以下の２種類をインプットとして使用することができます。<br>
+
+#### Raw_count (2 conditions)
+以下の条件を満たす場合、raw countデータを用いて解析を実行できます。
+   
+    - 解析対象となる２群のデータのみで構成されるファイル
+    - サンプル名のn数は、アンダーバー「 _ 」を用いて表記する
+    - アンダーバー「 _ 」は、n数の表記以外では使用しない
+    
+DEG解析は[DESeq2](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8)が適用されます。<br>
+その他のアルゴリズムを用いたDEG解析結果を統合解析に使用したい場合は、**DEG_Result from pair-wise analysis**からDEG解析結果をアップロードして下さい。
+
+![unchanged image](manual_figure/input_format1.png){.class width="50%"}<br>
+
+#### DEG_Result from pair-wise analysis
 RNA-seqのDEG result fileのフォーマットは以下の通りです。
 
 - 拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか
@@ -316,61 +371,84 @@ RNA-seqのDEG result fileのフォーマットは以下の通りです。
 - カラム名が「log2FoldChange」及び「padj」の列を含む
 
 上記の条件を満たせば、bulk RNA-seqまたはscRNA-seqのデータが使用できます。<br>
+**Name of condition 1/2**: RNA-seqの２群の条件名を記入できます。<br>
 **注意点**: Log2FoldChangeは「A vs B」の場合、Log2(A/B)で計算されるため、Upは負の値となります。RNAseqChef以外で取得したDEG resultファイルを利用される場合は、正負の値に注意して下さい。<br><br>
 ![](manual_figure/pair-wise DEG.png){#id .class width=90%}<br><br>
 
 #### Regulatory Potential (RP)をベースとした解析について
-Epigenome(DAR)の解析結果では以下のようなケースがあります。<br>
+Epigenomeの解析結果では以下のようなケースがあります。<br>
 １遺伝子に対して
 
-- 複数のDARが近傍に局在
-- upとdownの両方のDARが局在
+- 複数の変化したピークが近傍に局在
+- upとdownの両方のピークが局在
 
 遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
 本アプリでは、エピゲノム情報を一つのスコアにまとめるために**Regulatory Potential (RP)**の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
+RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。<br>
+**Pair-wise**ではpair-wise解析用に独自に改良したRPを使用することもできます。<br>
+**改良点1**: TSSから離れたピークでも変化率が大きいピークは重要と考えられるので、変化率でピークを重み付けします(Fold change weighting)。<br>
+**改良点2**: 増加したピークだけでなく減少したピークにも同時に対応できるように負の値まで拡張します。<br>
 RPスコアに反映されるTSSからのピークの最大距離は100kb（**Regulatory range (distance (kb) from TSS)**より変更可能）です。
 RNAseqのDEGのcutoffは、**Fold change cutoff for RNA-seq data**及び**FDR cutoff for RNA-seq data**より設定できます（defaultはfold change = 1.5, fdr = 0.05）。
+RPの定義は以下の選択肢をクリックすることで簡単に切り替えることができます。
+
+- Fold change weighting (combined): 従来のRPに改良点1と改良点2を加えて計算
+- Fold change weighting (individual): 従来のRPに改良点2のみを加えて計算
+- No weighting (combined): 従来のRPに改良点1のみを加えて計算
+- Classical (No weighting (individual)): 従来のRPで計算
+
+![](manual_figure/regulatory_potential.png){#id .class width=90%}<br><br>
+
+#### Mode
+遺伝子とピークの紐付けの方法を選択できます。<br>
+**Nearest**: 各ピークを最も近傍の遺伝子のみと紐付けます(１つのピークにつき１つの遺伝子)。<br>
+**Gene scan**: 各ピークを指定した範囲に含まれるすべての遺伝子と紐付けます(１つのピークにつき複数の遺伝子)。<br><br>
+![](manual_figure/pair-wise withRNAseq_mode.png){#id .class width=100%}<br><br>
 
 #### Boxplot
-RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP > 1)、RPが１より小さい遺伝子(RP < -1)、その他(Others)です。<br>
+RPの値を指標に遺伝子を分類し、各グループのlog10FoldChangeの値をプロットします。<br>
+combinedの場合: RP < -1, -1 < RP < -0.1, -0.1 < RP < -0.01, -0.01 < RP < 0, others, 0 < RP < 0.01, 0.01 < RP < 0.1, 0.1 < RP < 1, RP > 1<br>
+individualの場合: others, 0 < RP < 0.01, 0.01 < RP < 0.1, 0.1 < RP < 1, 1 < RP < 2, RP > 2<br>
 統計解析はTukeyHSDを実行します。* p<0.05, ** p<0.01, *** p<0.001<br>
 着目するEpigenome変化がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
-![](manual_figure/pair-wise boxplot.png){#id .class width=90%}<br><br>
+![](manual_figure/venn boxplot.png){#id .class width=90%}<br><br>
 
 #### Barplot
-DEGのうち、RPが0以上(または0以下)の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上(または0以下)の遺伝子のうち、DEGがどの程度存在するかを表示する。<br>
+以下の棒グラフを表示します。
+
+- 上: RNA-seqで定義される各カテゴリーの遺伝子について紐付けられたピークの数をヒストグラムで示します。
+- 下: エピゲノムのPair-wise解析結果から定義される各カテゴリーのピークについて紐付けられた遺伝子の数をヒストグラムで示します。
+
+**注意点**: modeをNearestに指定した場合は紐付けられる遺伝子の数は必ず１となります(下図)。
+![](manual_figure/venn barplot.png){#id .class width=90%}<br><br>
 
 #### KS plot
+
 RPスコアが高い順に遺伝子を並べて、３つのグループの（遺伝子発現が増加した遺伝子(up)、減少した遺伝子(down)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
 着目するEpigenome変化（RPスコア）と遺伝子発現変動の相関関係がわかります。<br><br>
-![](manual_figure/pair-wise barplot.png){#id .class width=90%}<br><br>
+![](manual_figure/venn ks.png){#id .class width=90%}<br><br>
 
 #### Result tableパネル
 TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(**Group(RNA-Epigenome)**より選択可能)の情報をテーブルデータとして出力します。<br>
-各グループに対応するDARは、bed形式でダウンロードすることも可能です。<br>
-ダウンロードしたbed fileは**Venn diagram**や**Clustering**、**Enrichment viewer**セクションにそのままアップロード・再解析が可能です。<br>
-興味ある項目をクリックすると、**Trackplotパネル**に選択したDAR及び近傍遺伝子のトラックプロットが出力されます。<br><br>
+例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(**Group(Epigenome:RNA)**より選択可能)の情報をテーブルデータとして出力します。<br>
+各グループに対応する変化したピーク領域は、bed形式でダウンロードすることも可能です。<br>
+ダウンロードしたbed fileは**Venn diagram**や**Clustering**、**Peaks of interest**セクションにそのままアップロード・再解析が可能です。<br>
+興味ある項目をクリックすると、**Trackplotパネル**に選択した変化したピーク領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
 ![](manual_figure/pair-wise rnaseqtrackplot.png){#id .class width=90%}<br><br>
 
 #### Functional enrichment analysisパネル
 興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
-このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
+このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。<br>
+**Category**: 遺伝子のカテゴリーの方法を指定できます。
+**RP status (from boxplot)**ではボックスプロットに表示されているRPでカテゴリーした遺伝子を選択できます。
+**Relationship (Epigenome:RNAseq)**ではResult tableパネルに表示されるGroupでカテゴリーした遺伝子を選択できます。<br>
+**Gene set**: エンリッチメント解析に使用する遺伝子セットを選択できます。<br>
+
 解析は、[ClusterProfiler](https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html)に依存します。<br><br>
 ![](manual_figure/pair-wise rnaseqenrich.png){#id .class width=90%}<br><br>
 
----
-
-### Combined Heatmap
-
-UpおよびDownしたPeakに対応するRNAseqのカウントデータやFoldChange、ChIP-seqやATAC-seqのPeakパターンをHeatmapで同時に可視化します。<br>
-STARTボタンを押すと、解析を実行します。<br><br>
-![](manual_figure/pair-wise comb.png){#id .class width=90%}<br><br>
 
 ---
 
@@ -416,40 +494,27 @@ BigWigファイルの順番を並び替えることができます。<br>
 
 アップロードしたbed fileのoverlap領域を同定します。<br>
 結果として、Venn diagramを出力します。<br>
-また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。
-<br><br>
+また、Bigwigファイルをアップロードした場合、各intersectのピークパターンがラインプロットで表示されます。<br><br>
 ![venn input](manual_figure/venn venn.png){#id .class width=90%}<br><br>
-#### Lineplot of intersections (comparison between intersections)
-アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
-一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br>
 
-#### Lineplot of intersections (comparison between bigwig)
-アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br>
+#### Intersection table
 
-![venn input](manual_figure/venn lineplot.png){#id .class width=90%}<br><br>
-
----
-
-### Peak pattern
-
-**Select intersect**から選択したvenn図の領域に関してPeak patternを分析します。<br>
+**Selected intersect**から興味あるベン図の領域を選択することで、その領域の位置情報が表示されます。<br>
 intersectのハイフン"-"はoverlapを意味します。。<br>
 例：A.bedとB.bedの解析の場合。<br>
 A: Bと重複しないAの領域<br>
 B: Aと重複しないBの領域<br>
 A-B: AとBのoverlap領域<br>
 
-#### Peak heatmapとline plot
+ダウンロードボタンを押すことで、ベン図で示されるすべての領域のbedファイルを取得できます。<br>
+ダンロードしたbedファイルは**Clustering**、**Peaks of interest**セクションのインプットとしてアップロード・再解析が可能です。<br><br>
 
-BigWig fileをアップロードした場合、表示されます。<br>
-選択した領域に関して中央から前後2000kbの領域をheatmap及びline plotとして出力します。<br>
-さらに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br>
+---
 
-#### Peak distribution
+### Annotation
 
-Speciesを選択した場合、表示されます。<br>
-選択した領域のannotation情報を円グラフとして出力します。<br>
-円グラフは次の3種類のレベルで表示されます。
+変化したピーク領域のannotation情報を円グラフとして出力します。<br>
+円グラフは次の3種類のレベルで表示されます。<br>
 
 - **Gene Level**<br>
 Promoter, Downstream, Gene body, Distal intergenic<br>
@@ -459,7 +524,11 @@ Exon, Intron, Intergenic<br>
 
 - **Exon Level**<br>
 5' UTR, 3' UTR, CDS, Other exon<br><br>
-![venn input](manual_figure/venn pattern.png){#id .class width=90%}<br><br>
+
+#### selected intersect dataパネル
+選択した領域の情報が表データとして出力されます。<br>
+近傍の遺伝子やannotation情報をtxt fileとしてダウンロード可能です。<br>
+![venn input](manual_figure/venn_annotation.png){#id .class width=90%}<br><br>
 
 #### Trackplotパネル
 **selected intersect dataパネル**の項目をクリックすると、選択した項目のトラックプロットを表示します。<br>
@@ -468,10 +537,22 @@ Exon, Intron, Intergenic<br>
 トラックプロットに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br><br>
 ![venn input](manual_figure/venn trackplot.png){#id .class width=90%}<br><br>
 
-#### selected intersect dataパネル
-選択した領域の情報が表データとして出力されます。<br>
-近傍の遺伝子やannotation情報をtxt fileとしてダウンロード可能です。<br>
-また、bed形式としてもダウンロード可能です。ダンロードしたbedファイルは**Clustering**、**Enrichment viewer**セクションのインプットとしてアップロード・再解析が可能です。<br><br>
+---
+
+### Peak pattern
+
+BigWig fileをアップロードした場合、表示されます。<br>
+選択した領域に関して中央から前後2000kbの領域をheatmap及びline plotとして出力します。<br>
+さらに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br>
+
+#### Lineplot of intersections (comparison between intersections)
+アップロードしたそれぞれのBigWigファイルに関して得られたintersection部分の平均値をプロットします。<br>
+一つのBigWigファイル内におけるintersection部分のピークの高さを比較できます。<br>
+
+#### Lineplot of intersections (comparison between bigwig)
+アップロードした全てのbigwigファイルに関してintersection部分のピークの高さを比較できます。<br><br>
+
+![venn input](manual_figure/venn lineplot.png){#id .class width=90%}<br><br>
 
 ---
 
@@ -525,49 +606,94 @@ HOMERの実行結果がzip形式で一括downloadできます。<br><br>
 ---
 
 ### with RNAseq
-RNA-seqのDEG(発現変動遺伝子) result fileをアップロードすることで、**Select intersect**から選択したvenn図の領域(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
+RNA-seqのデータをアップロードすることで、トランスクリプトームとの統合解析ができます。<br>
+RNA-seqのデータは以下の２種類をインプットとして使用することができます。<br>
+
+#### Raw_count (2 conditions)
+以下の条件を満たす場合、raw countデータを用いて解析を実行できます。
+   
+    - 解析対象となる２群のデータのみで構成されるファイル
+    - サンプル名のn数は、アンダーバー「 _ 」を用いて表記する
+    - アンダーバー「 _ 」は、n数の表記以外では使用しない
+    
+DEG解析は[DESeq2](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8)が適用されます。<br>
+その他のアルゴリズムを用いたDEG解析結果を統合解析に使用したい場合は、**DEG_Result from pair-wise analysis**からDEG解析結果をアップロードして下さい。
+
+![unchanged image](manual_figure/input_format1.png){.class width="50%"}<br>
+
+#### DEG_Result from pair-wise analysis
 RNA-seqのDEG result fileのフォーマットは以下の通りです。
 
 - 拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか
 - 1行目はgene symbolまたはENSEMBL ID
 - カラム名が「log2FoldChange」及び「padj」の列を含む
 
-上記の条件を満たせば、bulk RNA-seqまたはscRNA-seqのデータが使用できます。<br><br>
+上記の条件を満たせば、bulk RNA-seqまたはscRNA-seqのデータが使用できます。<br>
+**Name of condition 1/2**: RNA-seqの２群の条件名を記入できます。<br>
+**注意点**: Log2FoldChangeは「A vs B」の場合、Log2(A/B)で計算されるため、Upは負の値となります。RNAseqChef以外で取得したDEG resultファイルを利用される場合は、正負の値に注意して下さい。<br><br>
 ![](manual_figure/pair-wise DEG.png){#id .class width=90%}<br><br>
 
+#### Gene_list
+遺伝子リストを使用する場合は、同時にアップロードするファイルの数に依存してファイル形式のルールが変わります。
+**単一のファイルをアップロードする場合**:<br>
+- １列目は、遺伝子名
+- ２列目は、遺伝子に対応するグループ名 
+- ３列目以降は解析に影響しません
+- ファイル名は、拡張子以外でピリオド「 . 」を使用しない
+３列目以降は解析に影響しないため、カウントデータが含まれていても問題ありません。<br>
+RNAseqChefのVenn diagramやk-means clusteringで得たテーブルデータに関しては形式を変更せずにそのまま使用することができます。<br><br>
+**複数のファイルを同時にアップロードする場合**: <br>
+- １列目は、遺伝子名
+- ２列目以降は、解析に影響しません
+- ファイル名が、Group名として使用されます
+- ファイル名は、拡張子以外でピリオド「 . 」を使用しない
+
+例: 単一ファイルのアップロードの場合
+![](manual_figure/input_format_enrich.png){#id .class width=50%}<br><br>
+
 #### Regulatory Potential (RP)をベースとした解析について
-Epigenomeの解析結果では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
+Epigenomeの解析では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
 遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
 本アプリでは、エピゲノム情報を一つのスコアにまとめるために**Regulatory Potential (RP)**の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
+RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように各ピークをスコア化し、足し合わせたものとして定義されます。
 RPスコアに反映されるTSSからのピークの最大距離は100kb（**Regulatory range (distance (kb) from TSS)**より変更可能）です。
-RNAseqのDEGのcutoffは、**Fold change cutoff for RNA-seq data**及び**FDR cutoff for RNA-seq data**より設定できます（defaultはfold change = 1.5, fdr = 0.05）。
+RNAseqのDEGのcutoffは、**Fold change cutoff for RNA-seq data**及び**FDR cutoff for RNA-seq data**より設定できます（defaultはfold change = 1.5, fdr = 0.05）。<br>
+![](manual_figure/traditional_RP.png){#id .class width=90%}<br><br>
+
+#### Mode
+遺伝子とピークの紐付けの方法を選択できます。<br>
+**Nearest**: 各ピークを最も近傍の遺伝子のみと紐付けます(１つのピークにつき１つの遺伝子)。<br>
+**Gene scan**: 各ピークを指定した範囲に含まれるすべての遺伝子と紐付けます(１つのピークにつき複数の遺伝子)。<br><br>
+![](manual_figure/pair-wise withRNAseq_mode.png){#id .class width=100%}<br><br>
 
 #### Boxplot
-RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP > 1)、その他(Others)です。<br>
-統計解析はWelch's t-testを実行します。* p<0.05, ** p<0.01, *** p<0.001<br>
+RPの値を指標に遺伝子を分類し、各グループのlog10FoldChangeの値をプロットします。<br>
+others, 0 < RP < 0.01, 0.01 < RP < 0.1, 0.1 < RP < 1, 1 < RP < 2, RP > 2<br>
+統計解析はTukeyHSDを実行します。* p<0.05, ** p<0.01, *** p<0.001<br>
 着目するゲノム領域がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
 ![](manual_figure/venn boxplot.png){#id .class width=90%}<br><br>
 
 #### Barplot
-DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上の遺伝子のうち、DEGがどの程度存在するかを表示する。<br><br>
+以下の棒グラフを表示します。
+
+- 上: RNA-seqで定義される各カテゴリーの遺伝子について紐付けられたピークの数をヒストグラムで示します。
+- 下: Venn図解析結果から定義される各カテゴリーのピークについて紐付けられた遺伝子の数をヒストグラムで示します。
+
+**注意点**: modeをNearestに指定した場合は紐付けられる遺伝子の数は必ず１となります(下図)。
+![](manual_figure/pair-wise barplot.png){#id .class width=100%}<br><br>
 
 
 #### KS plot
-RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
+RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します(Gene_listをインプットとした場合は、定義したクラスターとそれ以外の遺伝子の分布を比較します)。<br>
 例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
 Kolmogorov-Smirnov testsにより有意差検定をします。<br>
 着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
 **intersect_associated**は選択したintersectに含まれるゲノム領域が近傍に局在する遺伝子です。<br>
-
-
 ![](manual_figure/venn barplot.png){#id .class width=90%}<br><br>
 
 #### Result tableパネル
 TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(**Group(RNA-Epigenome)**より選択可能)の情報をテーブルデータとして出力します。<br>
+例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(**Group(Epigenome:RNA)**より選択可能)の情報をテーブルデータとして出力します。<br>
 venn diagramやmotif解析用にbed形式でダウンロードすることも可能です。<br>
 興味ある項目をクリックすると、**Trackplotパネル**に選択した領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
 ![](manual_figure/venn rnaseqtrackplot.png){#id .class width=90%}<br><br>
@@ -575,8 +701,12 @@ venn diagramやmotif解析用にbed形式でダウンロードすることも可
 #### Functional enrichment analysisパネル
 興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
 このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
+**Category**: 遺伝子のカテゴリーの方法を指定できます。
+**RP status (from boxplot)**ではボックスプロットに表示されているRPでカテゴリーした遺伝子を選択できます。
+**Relationship (Epigenome:RNAseq)**ではResult tableパネルに表示されるGroupでカテゴリーした遺伝子を選択できます。<br>
+**Gene set**: エンリッチメント解析に使用する遺伝子セットを選択できます。<br>
 解析は、[ClusterProfiler](https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html)に依存します。<br><br>
-![](manual_figure/venn rnaseqenrich.png){#id .class width=90%}<br><br>
+![](manual_figure/pair-wise rnaseqenrich.png){#id .class width=90%}<br><br>
 ---
 
 ### Combined Heatmap
@@ -592,8 +722,8 @@ STARTボタンを押すと、解析を実行します。
 
 BigWig fileのクラスタリング解析を実行します。
 本セクションの用途は大きく分けて二つあります。
-１つ目は、PCAやMDS、dendrogram、correlation plotによるデータの俯瞰です。アップロードしたデータの大まかな類似性を可視化します。
-２つ目は、k-means clusteringを用いた詳細なゲノム領域の分析です。Pair-wise DARやVenn diagramで同定した領域をk-means clusteringを用いて細分化・機能評価を行います。
+- PCAやMDS、dendrogram、correlation plotによるデータの俯瞰です。アップロードしたデータの大まかな類似性を可視化します。
+- ２つ目は、k-means clusteringを用いた詳細なゲノム領域の分析です。興味あるゲノム領域をk-means clusteringを用いて細分化・機能評価を行います。
 
 ## Setting
 
@@ -611,8 +741,8 @@ BigWig fileのクラスタリング解析を実行します。
 
 - **Genome-wideを選ぶ場合**<br>
 Bed fileのアップロードが必要となります。<br>
-目的がデータの俯瞰の場合は、アップロードしたBigWigファイルに対応する全てのpeak call fileをアップロードしてください。(Pair-wise DARのようなFilter機能はありません。アップロードしたbed fileに含まれる全てのゲノム領域をカウント化します。)<br>
-目的がk-means clusteringを用いた詳細なゲノム領域の分析の場合は、Pair-wise DARやVenn diagramなどにより得たbed fileをアップロードしてください。
+目的がデータの俯瞰の場合は、アップロードしたBigWigファイルに対応する全てのpeak call fileをアップロードしてください。("Pair-wise" のようなFilter機能はありません。アップロードしたbed fileに含まれる全てのゲノム領域をカウント化します。)<br>
+目的がk-means clusteringを用いた詳細なゲノム領域の分析の場合は、Pair-wiseやVenn diagramなどにより得たbed fileをアップロードしてください。
 bedファイルに含まれるゲノム領域のみをカウント化します。
 （k-means clusteringを実行できるゲノム領域の数は最大10,000までのため、解析対象となるゲノム領域をある程度絞り込んだbed fileが必要となります。）
 - **Filter**<br>
@@ -675,32 +805,40 @@ Principal Component Analysis (PCA)、Multi-Dimensional Scaling (MDS), ward.D2に
 ### k-means clustering
 
 k-means clusteringを実行します。
-解析対象となるゲノム領域の数は、memoryの都合上、最大10,000領域(defaultは2000 loci。**Most variable loci**で変更可能)までです。<br>
 
-- **Select a pair for fold change cut-off**<br>
-Fold changeでcut-offしたい２群を選択できます。<br>
-cut-off後のゲノム領域の数が赤字で表示されるので、その数字を参考に**Most variable loci**を設定してください。<br>
+#### オプション: Filter 1 (FDR cut-off)
+一つの条件にn=2以上のサンプルがある場合、Limma-trendを用いた統計解析を実行することができます。<br>
+指定したFDRに満たないゲノム領域をcut-offすることができます。<br>
+
+If the uploaded data lacks replicates, this analysis will be skipped.<br><br>
+![](manual_figure/clustering statistical.png){#id .class width=90%}<br><br>
+
+#### オプション: Filter 2 (Fold change cut-off)
+Fold change cut-offを適応したい条件のペアを最大二つ選択することができます。<br>
+(例：条件A, B, Cの解析の場合、「AとBで2倍以上変化」かつ「BとCで2倍以上変化」したゲノム領域を抽出することができます)<br>
+Choose the two groups from **Select a pair for fold change cut-off** for which you want to apply the Fold Change cut-off.<br> 
+
 - **k-means number**<br>
-クラスターの数を設定します。
-- **Most variable loci**<br>
-cut-off後のゲノム領域の数が**Most variable loci**で指定した数値を上回る場合、中央絶対偏差(MAD)が大きい領域領域を抽出して解析します。<br>
+クラスターの数を設定します。<br>
+- **Start**ボタン<br>
+Startボタンを押すと解析が実行されます。<br>
+解析対象のゲノム領域の数が多いと非常に時間がかかります。<br>
+(webバージョンの場合、1万を大きく超えるゲノム領域を解析する場合はサーバーダウンする可能性があります)<br>
 - **Order of clusters on heatmap**<br>
 ヒートマップ上のクラスターの順番を変更することができます。<br>
-※ デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。
+※ デフォルトで階層的クラスタリングにより事前にある程度綺麗に並び替える機能を備えていますが、マニュアル操作で並び替えたい時にご利用ください。<br>
 
-![](manual_figure/clustering kmeans.png){#id .class width=90%}<br><br>
+**'Download bed files of all clusters'を押すことで、すべてのクラスターのbedファイルをダウンロードすることができます。**
 
-**cluster_list**から興味あるClusterを選択することで、さらに詳細な解析ができます。<br>
-なお、**cluster_list**で複数のClusterを選択した場合は、選択した全てのClusterを同一のClusterとみなして解析します（それぞれのクラスターを個別に解析するわけではありません）。<br>
+![](manual_figure/cluster_filter_kmeans.png){#id .class width=90%}<br><br>
 
-#### Peak pattern
-
-選択したClusterのPeak heatmapとline plotを出力します。<br>
-追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br><br>
+#### Custom clusterパネル
+**cluster_list**から結合したいClusterを選択することで、選択したClusterを同一のClusterとみなしてbedファイルを作成します。<br>
+Custom clusterのピークパターンがヒートマップとline plotとして可視化されます。
 ![](manual_figure/clustering pattern.png){#id .class width=90%}<br><br>
 
 #### Trackplotパネル
-**selected cluster dataパネル**の項目をクリックすると、選択した項目のトラックプロットを表示します。<br>
+**Custom clusterパネル**の項目をクリックすると、選択した項目のトラックプロットを表示します。<br>
 トラックプロットのハイライト（赤）は、選択した領域を示しています。<br>
 トラックプロットのピークの高さは、**peak range**で変更可能です。<br>
 トラックプロットに追加のデータを表示したい場合には、**select additional bigwig files**からデータをアップロードしてください。<br><br>
@@ -708,62 +846,7 @@ cut-off後のゲノム領域の数が**Most variable loci**で指定した数値
 
 ---
 
-### with RNAseq
-RNA-seqのDEG(発現変動遺伝子) result fileをアップロードすることで、**k-means cluster list**から選択したClusterの領域(epigenome)とDEG(transcriptome)の統合解析ができます。<br>
-RNA-seqのDEG result fileのフォーマットは以下の通りです。
-
-- 拡張子は、タブ区切りtxt、カンマ区切りcsv、エクセルxlsxのいずれか
-- 1行目はgene symbolまたはENSEMBL ID
-- カラム名が「log2FoldChange」及び「padj」の列を含む
-
-上記の条件を満たせば、bulk RNA-seqまたはscRNA-seqのデータが使用できます。<br><br>
-![](manual_figure/pair-wise DEG.png){#id .class width=90%}<br><br>
-
-#### Regulatory Potential (RP)をベースとした解析について
-Epigenomeの解析結果では、一つの遺伝子に対して複数のピークがassociateするケースがあります。<br>
-遺伝子発現とエピゲノム情報を統合解析するためには、まずは上記のような１遺伝子対して複数存在するエピゲノム情報を統合し、一つのスコアにまとめる必要があります。<br>
-本アプリでは、エピゲノム情報を一つのスコアにまとめるために**Regulatory Potential (RP)**の理論を採用しています。<br>
-RPスコアはピークの位置がTSSに近いほど高く、TSSから離れるほど低くなるように計算されます。
-RPスコアに反映されるTSSからのピークの最大距離は100kb（**Regulatory range (distance (kb) from TSS)**より変更可能）です。
-RNAseqのDEGのcutoffは、**Fold change cutoff for RNA-seq data**及び**FDR cutoff for RNA-seq data**より設定できます（defaultはfold change = 1.5, fdr = 0.05）。
-
-#### Boxplot
-RPの値を指標に遺伝子を分類し、各グループのlog2FoldChangeの値をプロットします。<br>
-RPの分類はRPが１より大きい遺伝子(RP > 1)、その他(Others)です。<br>
-統計解析はWelch's t-testを実行します。* p<0.05, ** p<0.01, *** p<0.001<br>
-着目するゲノム領域がどの程度遺伝子発現変動に寄与するかがわかります。<br><br>
-![](manual_figure/clustering boxplot.png){#id .class width=90%}<br><br>
-
-#### Barplot
-DEGのうち、RPが0以上の遺伝子がどの程度存在するかを積み上げ棒グラフで表示する。<br>
-また逆に、RPが0以上の遺伝子のうち、DEGがどの程度存在するかを表示する。<br><br>
-
-
-#### KS plot
-RPスコアが高い順に遺伝子を並べて、２つのグループの（遺伝子発現が増加した遺伝子(up)、有意差が見られなかった遺伝子(NS)）の分布を比較します。<br>
-例えば、RPスコアが高いほど遺伝子発現が増加する傾向にある場合、赤色で示すupの線は灰色で示すNSの線より左側で立ち上がります。<br>
-Kolmogorov-Smirnov testsにより有意差検定をします。<br>
-着目するゲノム領域（RPスコア）と遺伝子発現変動の相関関係がわかります。<br>
-**cluster_associated**は選択したclusterに含まれるゲノム領域が近傍に局在する遺伝子です。<br><br>
-![](manual_figure/clustering barplot.png){#id .class width=90%}<br><br>
-
-#### Result tableパネル
-TranscriptomeとEpigenomeの情報をリンクさせた分類結果を出力します。
-例えば、「RNA及びEpigenomeが共にupした遺伝子」や「RNA及びEpigenomeが共にdownした遺伝子」など(**Group(RNA-Epigenome)**より選択可能)の情報をテーブルデータとして出力します。<br>
-venn diagramやmotif解析用にbed形式でダウンロードすることも可能です。<br>
-興味ある項目をクリックすると、**Trackplotパネル**に選択した領域及び近傍遺伝子のトラックプロットが出力されます。<br><br>
-![](manual_figure/clustering rnaseqtrackplot.png){#id .class width=90%}<br><br>
-
-#### Functional enrichment analysisパネル
-興味あるグループを選択すると、エンリッチメント解析を実行します。<br>
-このエンリッチメント解析は、RNA-seq解析におけるエンリッチメント解析方法を使用します（GREATをベースとしたエンリッチメント解析とは異なります）。
-解析は、[ClusterProfiler](https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html)に依存します。<br><br>
-![](manual_figure/clustering rnaseqenrich.png){#id .class width=90%}<br><br>
-
-
----
-
-# Enrichment viewer
+# Peaks of interest
 
 bed fileに含まれるゲノム領域に対してエンリッチメント解析を実行します。<br>
 Venn diagramやk-means clusteringの結果を用いることで、同定したグループ・クラスターの機能やモチーフを比較・可視化します。
@@ -780,7 +863,7 @@ Venn diagramやk-means clusteringの結果を用いることで、同定した�
 #### Input
 
 - **Bed files**<br>
-Enrichment viewerにおいて必ず必要となるファイルです。<br>
+Peaks of interestにおいて必ず必要となるファイルです。<br>
 ファイル名はFigure中のサンプル名として使用されます。<br>
 長すぎるファイル名はFigure作成に悪影響を及ぼすため、シンプルなファイル名を推奨します。<br>
 
@@ -789,6 +872,7 @@ Enrichment viewerにおいて必ず必要となるファイルです。<br>
 #### Species
 適切な種（リファレンス）の選択が必須です。
 <br>  
+
 
 ---
 
@@ -890,7 +974,7 @@ AのうちBとoverlapする領域だけを抽出したファイルを作成し�
 
 ## HOMER: Background sequenceの差
 
-例: ATAC-seqのサンプルでpair-wise DARを実行
+例: ATAC-seqのサンプルでPair-wiseを実行
 ![venn input](manual_figure/motif background.png){#id .class width=100%}<br><br>
 
 ## ChIP-atlasのデータの注意点：修飾ヒストンのChIP-seqデータの解析
@@ -1067,6 +1151,4 @@ You may contact the author of this code, Kan Etoh, at <kaneto@kumamoto-u.ac.jp>
 ```{r, echo = TRUE}
  sessionInfo()
 ```
-
-
 
